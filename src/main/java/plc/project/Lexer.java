@@ -29,7 +29,9 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        throw new UnsupportedOperationException(); //TODO
+        while ( chars.has(0) ) {
+
+        }
     }
 
     /**
@@ -41,54 +43,68 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        char nextChar = chars.get(0);
-        Token matchedToken = null;
-        switch (nextChar) {
-            case peek("[A-Za-z_] [A-Za-z0-9_-]*"): //Identifier
-                matchedToken = lexIdentifier();
-            break;
-            case peek("[+\\-]? [0-9]+ ('.' [0-9]+)?"): //Number
-                matchedToken = lexNumber();
-            break;
-            case peek("['] ([^'\\n\\r\\\\] | escape) [']"): //Character
-                matchedToken = lexCharacter();
-            break;
-            case peek("'\"' ([^\"\\n\\r\\\\] | escape)* '\"'"): //String
-                matchedToken = lexString();
-            break;
-            case peek("'\\' [bnrt'\"\\\\]"): //Escape
-                matchedToken = lexEscape();
-            break;
-            case peek("[<>!=] '='? | 'any character'"): //Operator
-                matchedToken = lexOperator();
+
+        if ( peek("\\s*") ) { //Whitespace
+            handleWhitespace();
         }
-        return matchedToken;
+
+        if ( peek("[A-Za-z_] [A-Za-z0-9_-]*") ) { //Identifier
+            return lexIdentifier();
+        } else if ( peek("[+\\-]? [0-9]+ ('.' [0-9]+)?") ) { //Number
+            return lexNumber();
+        } else if ( peek("['] ([^'\\n\\r\\\\] | '\\' [bnrt'\"\\\\]) [']") ) { //Character
+            return lexCharacter();
+        } else if ( peek("'\"' ([^\"\\n\\r\\\\] | '\\' [bnrt'\"\\\\])* '\"'") ) { //String
+            return lexString();
+        } else if ( peek("[<>!=] '='? | \\S") ) { //Operator
+            return lexOperator();
+        }
+        throw new ParseException("Parse Exception: " + chars.get(chars.index), chars.index);
     }
 
     public Token lexIdentifier() {
-
+        if ( match("[A-Za-z_] [A-Za-z0-9_-]*") ) {
+            return chars.emit(Token.Type.IDENTIFIER);
+        }
+        throw new ParseException("Error Parsing Identifier", chars.index);
     }
 
     public Token lexNumber() {
-        throw new UnsupportedOperationException(); //TODO
+        if ( match("[+\\-]? [0-9]+ ('.' [0-9]+)+") ) {
+            return chars.emit(Token.Type.DECIMAL);
+        } else if ( match("[+\\-]? [0-9]+") ) {
+            return chars.emit(Token.Type.INTEGER);
+        }
+        throw new ParseException("Error Parsing Number", chars.index);
     }
 
     public Token lexCharacter() {
-        throw new UnsupportedOperationException(); //TODO
+        if ( match("['] ([^'\\n\\r\\\\] | escape) [']") ) {
+            return chars.emit(Token.Type.CHARACTER);
+        }
+        throw new ParseException("Error Parsing Character", chars.index);
     }
 
     public Token lexString() {
-        throw new UnsupportedOperationException(); //TODO
-    }
-
-    public void lexEscape() {
-        throw new UnsupportedOperationException(); //TODO
+        if ( match("'\"' ([^\"\\n\\r\\\\] | '\\' [bnrt'\"\\\\])* '\"'") ) {
+            return chars.emit(Token.Type.STRING);
+        }
+        throw new ParseException("Error Parsing String", chars.index);
     }
 
     public Token lexOperator() {
-        throw new UnsupportedOperationException(); //TODO
+        if ( match("[<>!=] '='? | \\S") ) {
+            return chars.emit(Token.Type.OPERATOR);
+        }
+        throw new ParseException("Error Parsing Operator", chars.index);
     }
 
+    public void handleWhitespace() {
+        if ( match("[A-Za-z_] [A-Za-z0-9_-]*") ) {
+            return;
+        }
+        throw new ParseException("Error Parsing Whitespace", chars.index);
+    }
     /**
      * Returns true if the next sequence of characters match the given patterns,
      * which should be a regex. For example, {@code peek("a", "b", "c")} would
