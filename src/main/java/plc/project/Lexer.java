@@ -41,11 +41,32 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        throw new UnsupportedOperationException(); //TODO
+        char nextChar = chars.get(0);
+        Token matchedToken = null;
+        switch (nextChar) {
+            case peek("[A-Za-z_] [A-Za-z0-9_-]*"): //Identifier
+                matchedToken = lexIdentifier();
+            break;
+            case peek("[+\\-]? [0-9]+ ('.' [0-9]+)?"): //Number
+                matchedToken = lexNumber();
+            break;
+            case peek("['] ([^'\\n\\r\\\\] | escape) [']"): //Character
+                matchedToken = lexCharacter();
+            break;
+            case peek("'\"' ([^\"\\n\\r\\\\] | escape)* '\"'"): //String
+                matchedToken = lexString();
+            break;
+            case peek("'\\' [bnrt'\"\\\\]"): //Escape
+                matchedToken = lexEscape();
+            break;
+            case peek("[<>!=] '='? | 'any character'"): //Operator
+                matchedToken = lexOperator();
+        }
+        return matchedToken;
     }
 
     public Token lexIdentifier() {
-        throw new UnsupportedOperationException(); //TODO
+
     }
 
     public Token lexNumber() {
