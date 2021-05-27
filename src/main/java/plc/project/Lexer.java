@@ -1,5 +1,6 @@
 package plc.project;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,9 +30,11 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        while ( chars.has(0) ) {
-
+        List<Token> tokens = new ArrayList<Token>();
+        while ( chars.has(chars.index) ) {
+            tokens.add(lexToken());
         }
+        return tokens;
     }
 
     /**
@@ -48,11 +51,11 @@ public final class Lexer {
             handleWhitespace();
         }
 
-        if ( peek("[A-Za-z_] [A-Za-z0-9_-]*") ) { //Identifier
+        if ( peek("[A-Za-z_]") ) { //Identifier
             return lexIdentifier();
-        } else if ( peek("[+\\-]? [0-9]+ ('.' [0-9]+)?") ) { //Number
+        } else if ( peek("[+\\-]") || peek("[0-9]") ) { //Number
             return lexNumber();
-        } else if ( peek("['] ([^'\\n\\r\\\\] | '\\' [bnrt'\"\\\\]) [']") ) { //Character
+        } else if ( peek("[']") ) { //Character
             return lexCharacter();
         } else if ( peek("'\"' ([^\"\\n\\r\\\\] | '\\' [bnrt'\"\\\\])* '\"'") ) { //String
             return lexString();
@@ -61,25 +64,27 @@ public final class Lexer {
         }
         throw new ParseException("Parse Exception: " + chars.get(chars.index), chars.index);
     }
-
     public Token lexIdentifier() {
-        if ( match("[A-Za-z_] [A-Za-z0-9_-]*") ) {
-            return chars.emit(Token.Type.IDENTIFIER);
-        }
-        throw new ParseException("Error Parsing Identifier", chars.index);
+        while ( match("[A-Za-z0-9_-]*") ); //Iterate through string until no longer matches, then use emit
+        return chars.emit(Token.Type.IDENTIFIER);
     }
 
     public Token lexNumber() {
-        if ( match("[+\\-]? [0-9]+ ('.' [0-9]+)+") ) {
-            return chars.emit(Token.Type.DECIMAL);
-        } else if ( match("[+\\-]? [0-9]+") ) {
+        boolean decimal = false;
+        match("[+\\-]"); //There may be a single leading + or -
+        while( match("[0-9]") ); //Get all leading digits
+        if ( !match("\\.") ) { //If there's no decimal, we have an integer
             return chars.emit(Token.Type.INTEGER);
         }
-        throw new ParseException("Error Parsing Number", chars.index);
+        if ( !match("[0-9]") ) { //Must be at least one trailing digit after decimal
+            throw new ParseException("Error Parsing Decimal: Invalid Trailing Decimal", chars.index);
+        }
+        while( match("[0-9]") ); //Get all remaining trailing digits
+        return chars.emit(Token.Type.DECIMAL);
     }
-
+//['] ([^'\n\r\\] | '\' [bnrt'"\\]) [']
     public Token lexCharacter() {
-        if ( match("['] ([^'\\n\\r\\\\] | escape) [']") ) {
+        if ( match("\\'((\\S)|(\\\\[bnrt\\'\\\"\\\\]))\\'") ) {
             return chars.emit(Token.Type.CHARACTER);
         }
         throw new ParseException("Error Parsing Character", chars.index);
