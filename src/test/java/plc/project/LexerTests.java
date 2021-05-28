@@ -100,6 +100,8 @@ public class LexerTests {
     private static Stream<Arguments> testOperator() {
         return Stream.of(
                 Arguments.of("Character", "(", true),
+                Arguments.of("End Parenthesis", ")", true),
+                Arguments.of("Semicolon", ";", true),
                 Arguments.of("Comparison", "<=", true),
                 Arguments.of("Space", " ", false),
                 Arguments.of("Tab", "\t", false)
@@ -127,6 +129,13 @@ public class LexerTests {
                         new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
+                )),
+                Arguments.of("Example 3", " LET x = 5;", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "LET", 1),
+                        new Token(Token.Type.IDENTIFIER, "x", 5),
+                        new Token(Token.Type.OPERATOR, "=", 7),
+                        new Token(Token.Type.INTEGER, "5", 9),
+                        new Token(Token.Type.OPERATOR, ";", 10)
                 ))
         );
     }
