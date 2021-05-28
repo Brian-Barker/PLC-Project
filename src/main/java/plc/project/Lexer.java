@@ -31,7 +31,8 @@ public final class Lexer {
      */
     public List<Token> lex() {
         List<Token> tokens = new ArrayList<Token>();
-        while ( chars.has(chars.index) ) {
+        while ( chars.has(0) ) {
+            handleWhitespace();
             tokens.add(lexToken());
         }
         return tokens;
@@ -46,11 +47,6 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-
-        if ( peek("\\s") ) { //Whitespace
-            handleWhitespace();
-        }
-
         if ( peek("[A-Za-z_]") ) { //Identifier
             return lexIdentifier();
         } else if ( peek("[+\\-]") || peek("[0-9]") ) { //Number
@@ -70,7 +66,7 @@ public final class Lexer {
     }
 
     public Token lexNumber() {
-        match("[+\\-]"); //There may be a single leading + or -
+        match("[+\\-]?"); //There may be a single leading + or -
         while( match("[0-9]") ); //Get all leading digits
         if ( !match("\\.") ) { //If there's no decimal, we have an integer
             return chars.emit(Token.Type.INTEGER);
@@ -102,7 +98,7 @@ public final class Lexer {
         }
         throw new ParseException("Error Parsing String", chars.index);
     }
-//"[<>!=] '='? | \\S"
+
     public Token lexOperator() {
         if ( match("[<>!=]", "=?") || match("\\S") ) {
             return chars.emit(Token.Type.OPERATOR);
@@ -121,6 +117,7 @@ public final class Lexer {
     }
     public void handleWhitespace() {
         while( match("\\s") );
+        chars.skip();
     }
     /**
      * Returns true if the next sequence of characters match the given patterns,
