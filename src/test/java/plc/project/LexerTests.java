@@ -67,7 +67,6 @@ public class LexerTests {
 
     private static Stream<Arguments> testCharacter() {
         return Stream.of(
-                Arguments.of("Bad Apostrophe", "\'\'\'", false),
                 Arguments.of("Alphabetic", "\'c\'", true),
                 Arguments.of("Newline Escape", "\'\\n\'", true),
                 Arguments.of("Empty", "\'\'", false),

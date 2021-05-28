@@ -47,7 +47,7 @@ public final class Lexer {
      */
     public Token lexToken() {
 
-        if ( peek("\\s*") ) { //Whitespace
+        if ( peek("\\s") ) { //Whitespace
             handleWhitespace();
         }
 
@@ -57,12 +57,12 @@ public final class Lexer {
             return lexNumber();
         } else if ( peek("[']") ) { //Character
             return lexCharacter();
-        } else if ( peek("'\"' ([^\"\\n\\r\\\\] | '\\' [bnrt'\"\\\\])* '\"'") ) { //String
+        } else if ( peek("\"") ) { //String
             return lexString();
-        } else if ( peek("[<>!=] '='? | \\S") ) { //Operator
+        } else if ( peek("[<>!=]|\\S") ) { //Operator
             return lexOperator();
         }
-        throw new ParseException("Parse Exception: " + chars.get(chars.index), chars.index);
+        throw new ParseException("Parse Exception", chars.index);
     }
     public Token lexIdentifier() {
         while ( match("[A-Za-z0-9_-]*") ); //Iterate through string until no longer matches, then use emit
@@ -70,7 +70,6 @@ public final class Lexer {
     }
 
     public Token lexNumber() {
-        boolean decimal = false;
         match("[+\\-]"); //There may be a single leading + or -
         while( match("[0-9]") ); //Get all leading digits
         if ( !match("\\.") ) { //If there's no decimal, we have an integer
@@ -82,33 +81,46 @@ public final class Lexer {
         while( match("[0-9]") ); //Get all remaining trailing digits
         return chars.emit(Token.Type.DECIMAL);
     }
-//['] ([^'\n\r\\] | '\' [bnrt'"\\]) [']
+
     public Token lexCharacter() {
-        if ( match("\\'((\\S)|(\\\\[bnrt\\'\\\"\\\\]))\\'") ) {
-            return chars.emit(Token.Type.CHARACTER);
+        match("\'");
+        if ( lexEscape() || match(".") ) {
+            if ( match("\'") ) {
+                return chars.emit(Token.Type.CHARACTER);
+            } else {
+                throw new ParseException("Error Parsing Character: No Trailing Apostrophe", chars.index);
+            }
         }
         throw new ParseException("Error Parsing Character", chars.index);
     }
 
     public Token lexString() {
-        if ( match("'\"' ([^\"\\n\\r\\\\] | '\\' [bnrt'\"\\\\])* '\"'") ) {
+        match("\"");
+        while( lexEscape() || match("[^\"]") ); //Match all chars in string
+        if ( match("\"") ) {
             return chars.emit(Token.Type.STRING);
         }
         throw new ParseException("Error Parsing String", chars.index);
     }
-
+//"[<>!=] '='? | \\S"
     public Token lexOperator() {
-        if ( match("[<>!=] '='? | \\S") ) {
+        if ( match("[<>!=]", "=?") || match("\\S") ) {
             return chars.emit(Token.Type.OPERATOR);
         }
         throw new ParseException("Error Parsing Operator", chars.index);
     }
 
-    public void handleWhitespace() {
-        if ( match("[A-Za-z_] [A-Za-z0-9_-]*") ) {
-            return;
+    public boolean lexEscape() {
+        if ( peek("\\\\") ) {
+            if ( !match("\\\\", "[bnrt'\"\\\\]") ) {
+                throw new ParseException("Error Parsing: Invalid Escape", chars.index);
+            }
+            return true;
         }
-        throw new ParseException("Error Parsing Whitespace", chars.index);
+        return false;
+    }
+    public void handleWhitespace() {
+        while( match("\\s") );
     }
     /**
      * Returns true if the next sequence of characters match the given patterns,
