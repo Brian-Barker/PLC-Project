@@ -252,12 +252,26 @@ public class LexerTests {
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
                 )),
-                Arguments.of("Example 3", "string test = \"I\'m #1!\";", Arrays.asList(
+                Arguments.of("Example 3: Apostrophe", "string test = \"I\'m #1!\";", Arrays.asList(
                         new Token(Token.Type.IDENTIFIER, "string", 0),
                         new Token(Token.Type.IDENTIFIER, "test", 7),
                         new Token(Token.Type.OPERATOR, "=", 12),
                         new Token(Token.Type.STRING, "\"I\'m #1!\"", 14),
                         new Token(Token.Type.OPERATOR, ";", 23)
+                )),
+                Arguments.of("Example 4: Operators", "test = (1 + variable)*3 - 2;", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "test", 0),
+                        new Token(Token.Type.OPERATOR, "=", 5),
+                        new Token(Token.Type.OPERATOR, "(", 7),
+                        new Token(Token.Type.INTEGER, "1", 8),
+                        new Token(Token.Type.OPERATOR, "+", 10),
+                        new Token(Token.Type.IDENTIFIER, "variable", 12),
+                        new Token(Token.Type.OPERATOR, ")", 20),
+                        new Token(Token.Type.OPERATOR, "*", 21),
+                        new Token(Token.Type.INTEGER, "3", 22),
+                        new Token(Token.Type.OPERATOR, "-", 24),
+                        new Token(Token.Type.INTEGER, "2", 26),
+                        new Token(Token.Type.OPERATOR, ";", 27)
                 ))
         );
     }
