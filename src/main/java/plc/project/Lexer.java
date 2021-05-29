@@ -1,5 +1,6 @@
 package plc.project;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +30,12 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        throw new UnsupportedOperationException(); //TODO
+        List<Token> tokens = new ArrayList<Token>();
+        while ( chars.has(0) ) {
+            handleWhitespace();
+            tokens.add(lexToken());
+        }
+        return tokens;
     }
 
     /**
@@ -41,54 +47,78 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        char nextChar = chars.get(0);
-        Token matchedToken = null;
-        switch (nextChar) {
-            case peek("[A-Za-z_] [A-Za-z0-9_-]*"): //Identifier
-                matchedToken = lexIdentifier();
-            break;
-            case peek("[+\\-]? [0-9]+ ('.' [0-9]+)?"): //Number
-                matchedToken = lexNumber();
-            break;
-            case peek("['] ([^'\\n\\r\\\\] | escape) [']"): //Character
-                matchedToken = lexCharacter();
-            break;
-            case peek("'\"' ([^\"\\n\\r\\\\] | escape)* '\"'"): //String
-                matchedToken = lexString();
-            break;
-            case peek("'\\' [bnrt'\"\\\\]"): //Escape
-                matchedToken = lexEscape();
-            break;
-            case peek("[<>!=] '='? | 'any character'"): //Operator
-                matchedToken = lexOperator();
+        if ( peek("[A-Za-z_]") ) { //Identifier
+            return lexIdentifier();
+        } else if ( peek("[+\\-]") || peek("[0-9]") ) { //Number
+            return lexNumber();
+        } else if ( peek("[']") ) { //Character
+            return lexCharacter();
+        } else if ( peek("\"") ) { //String
+            return lexString();
+        } else if ( peek("[<>!=]|\\S") ) { //Operator
+            return lexOperator();
         }
-        return matchedToken;
+        throw new ParseException("Parse Exception", chars.index);
     }
-
     public Token lexIdentifier() {
-
+        while ( match("[A-Za-z0-9_-]*") ); //Iterate through string until no longer matches, then use emit
+        return chars.emit(Token.Type.IDENTIFIER);
     }
 
     public Token lexNumber() {
-        throw new UnsupportedOperationException(); //TODO
+        match("[+\\-]?"); //There may be a single leading + or -
+        while( match("[0-9]") ); //Get all leading digits
+        if ( !match("\\.") ) { //If there's no decimal, we have an integer
+            return chars.emit(Token.Type.INTEGER);
+        }
+        if ( !match("[0-9]") ) { //Must be at least one trailing digit after decimal
+            throw new ParseException("Error Parsing Decimal: Invalid Trailing Decimal", chars.index);
+        }
+        while( match("[0-9]") ); //Get all remaining trailing digits
+        return chars.emit(Token.Type.DECIMAL);
     }
 
     public Token lexCharacter() {
-        throw new UnsupportedOperationException(); //TODO
+        match("\'");
+        if ( lexEscape() || match(".") ) {
+            if ( match("\'") ) {
+                return chars.emit(Token.Type.CHARACTER);
+            } else {
+                throw new ParseException("Error Parsing Character: No Trailing Apostrophe", chars.index);
+            }
+        }
+        throw new ParseException("Error Parsing Character", chars.index);
     }
 
     public Token lexString() {
-        throw new UnsupportedOperationException(); //TODO
-    }
-
-    public void lexEscape() {
-        throw new UnsupportedOperationException(); //TODO
+        match("\"");
+        while( lexEscape() || match("[^\"]") ); //Match all chars in string
+        if ( match("\"") ) {
+            return chars.emit(Token.Type.STRING);
+        }
+        throw new ParseException("Error Parsing String", chars.index);
     }
 
     public Token lexOperator() {
-        throw new UnsupportedOperationException(); //TODO
+        if ( match("[<>!=]", "=?") || match("\\S") ) {
+            return chars.emit(Token.Type.OPERATOR);
+        }
+        throw new ParseException("Error Parsing Operator", chars.index);
     }
 
+    public boolean lexEscape() {
+        if ( peek("\\\\") ) {
+            if ( !match("\\\\", "[bnrt'\"\\\\]") ) {
+                throw new ParseException("Error Parsing: Invalid Escape", chars.index);
+            }
+            return true;
+        }
+        return false;
+    }
+    public void handleWhitespace() {
+        while( match("\\s") );
+        chars.skip();
+    }
     /**
      * Returns true if the next sequence of characters match the given patterns,
      * which should be a regex. For example, {@code peek("a", "b", "c")} would

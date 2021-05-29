@@ -1,4 +1,4 @@
-//package plc.project;
+package plc.project;
 
 public class CharStreamTest {
     public static void main(String args[]) {
