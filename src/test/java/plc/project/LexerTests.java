@@ -144,6 +144,7 @@ public class LexerTests {
                 Arguments.of("Only Left Quote", "\'c", false),
                 Arguments.of("Only Right Quote", "c\'", false),
                 Arguments.of("Numeric Multiple", "\'123\'", false),
+                Arguments.of("Escaped Quote", "\'\'\'", false),
                 Arguments.of("Quote Entered", "\''\'", false)
         );
     }

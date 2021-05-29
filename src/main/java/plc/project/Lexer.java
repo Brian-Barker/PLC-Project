@@ -67,7 +67,10 @@ public final class Lexer {
 
     public Token lexNumber() {
         match("[+\\-]?"); //There may be a single leading + or -
-        while( match("[0-9]") ); //Get all leading digits
+        if ( !match("[0-9]") ) { //Makes sure the first digit is a number
+            throw new ParseException("Error Parsing Decimal: Invalid Number", chars.index);
+        }
+        while( match("[0-9]") ); //Get all remaining leading digits
         if ( !match("\\.") ) { //If there's no decimal, we have an integer
             return chars.emit(Token.Type.INTEGER);
         }
@@ -80,7 +83,7 @@ public final class Lexer {
 
     public Token lexCharacter() {
         match("\'");
-        if ( lexEscape() || match(".") ) {
+        if ( lexEscape() || match("[^\']") ) {
             if ( match("\'") ) {
                 return chars.emit(Token.Type.CHARACTER);
             } else {
@@ -100,7 +103,7 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        if ( match("[<>!=]", "=?") || match("\\S") ) {
+        if ( match("[<>!=]", "=?") || match("[\\S]") ) {
             return chars.emit(Token.Type.OPERATOR);
         }
         throw new ParseException("Error Parsing Operator", chars.index);
