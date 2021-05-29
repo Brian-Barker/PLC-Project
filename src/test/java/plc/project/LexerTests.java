@@ -138,11 +138,11 @@ public class LexerTests {
                 Arguments.of("Escape: Single Quote", "\'\\'\'", true),
                 Arguments.of("Escape: Double Quote", "\'\\\"\'", true),
                 Arguments.of("Escape: Backslash", "\'\\\\'", true),
+                Arguments.of("Numeric 0", "\'0\'", true),
+                Arguments.of("Numeric 9", "\'9\'", true),
                 Arguments.of("No Quotes", "c", false),
                 Arguments.of("Only Left Quote", "\'c", false),
                 Arguments.of("Only Right Quote", "c\'", false),
-                Arguments.of("Numeric 0", "\'0\'", false),
-                Arguments.of("Numeric 9", "\'9\'", false),
                 Arguments.of("Numeric Multiple", "\'123\'", false),
                 Arguments.of("Quote Entered", "\''\'", false)
         );
