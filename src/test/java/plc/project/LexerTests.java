@@ -173,13 +173,16 @@ public class LexerTests {
                 Arguments.of("Escape: Single Quote", "\"\\'\"", true),
                 Arguments.of("Escape: Double Quote", "\"\\\"\"", true),
                 Arguments.of("Escape: Backslash", "\"\\\\\"", true),
+                Arguments.of("Last Character Escape", "\"Escape\\'\"", true),
                 Arguments.of("Numeric 0", "\"0\"", true),
                 Arguments.of("Numeric 9", "\"9\"", true),
                 Arguments.of("Numeric Multiple", "\"123\"", true),
                 Arguments.of("Double Quote Entered", "\"\"\"", false),
                 Arguments.of("Unterminated Closing", "\"Closing unterminated", false),
                 Arguments.of("Unterminated Opening", "Opening unterminated\"", false),
-                Arguments.of("Double Unterminated", "Double Unterminated", false)
+                Arguments.of("Double Unterminated", "Double Unterminated", false),
+                Arguments.of("Last Character Newline", "New Line\\n", false),
+                Arguments.of("Last Character Newline", "New Line\\r", false)
         );
     }
 
@@ -217,6 +220,7 @@ public class LexerTests {
                 Arguments.of("Division", "/", true),
                 Arguments.of("Addition", "+", true),
                 Arguments.of("Subtraction", "-", true),
+                Arguments.of("Multiplication", "*", true),
                 Arguments.of("Percent Sign", "%", true),
                 Arguments.of("Exclaimation", "!", true),
                 Arguments.of("Question", "?", true),
@@ -248,11 +252,12 @@ public class LexerTests {
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
                 )),
-                Arguments.of("Example 3", "I'm #1!", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "I'm", 0),
-                        new Token(Token.Type.OPERATOR, "#", 4),
-                        new Token(Token.Type.INTEGER, "1", 5),
-                        new Token(Token.Type.INTEGER, "!", 6)
+                Arguments.of("Example 3", "string test = \"I\'m #1!\";", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "string", 0),
+                        new Token(Token.Type.IDENTIFIER, "test", 7),
+                        new Token(Token.Type.OPERATOR, "=", 12),
+                        new Token(Token.Type.STRING, "\"I\'m #1!\"", 14),
+                        new Token(Token.Type.OPERATOR, ";", 23)
                 ))
         );
     }

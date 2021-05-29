@@ -1,6 +1,7 @@
 homework
 build
 gradle
+.gradle
 .gradle/6.8/executionHistory/executionHistory.bin
 .gradle/6.8/executionHistory/executionHistory.lock
 .gradle/6.8/fileHashes/fileHashes.bin
@@ -9,3 +10,15 @@ gradle
 .gradle/buildOutputCleanup/buildOutputCleanup.lock
 build/tmp/compileJava/source-classes-mapping.txt
 build/tmp/compileTestJava/source-classes-mapping.txt
+.gradle/6.8/executionHistory/executionHistory.bin
+.gradle/6.8/executionHistory/executionHistory.lock
+.gradle/6.8/fileHashes/fileHashes.bin
+.gradle/6.8/fileHashes/fileHashes.lock
+.gradle/6.8/fileHashes/resourceHashesCache.bin
+.gradle/6.8/javaCompile/classAnalysis.bin
+.gradle/6.8/javaCompile/jarAnalysis.bin
+.gradle/6.8/javaCompile/javaCompile.lock
+.gradle/6.8/javaCompile/taskHistory.bin
+.gradle/buildOutputCleanup/buildOutputCleanup.lock
+.idea/misc.xml
+.idea/misc.xml

@@ -49,7 +49,7 @@ public final class Lexer {
     public Token lexToken() {
         if ( peek("[A-Za-z_]") ) { //Identifier
             return lexIdentifier();
-        } else if ( peek("[+\\-]") || peek("[0-9]") ) { //Number
+        } else if ( peek("[+\\-]", "[0-9]") || peek("[0-9]") ) { //Number
             return lexNumber();
         } else if ( peek("[']") ) { //Character
             return lexCharacter();
