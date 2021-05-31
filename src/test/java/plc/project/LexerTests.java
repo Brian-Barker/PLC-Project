@@ -182,7 +182,8 @@ public class LexerTests {
                 Arguments.of("Unterminated Opening", "Opening unterminated\"", false),
                 Arguments.of("Double Unterminated", "Double Unterminated", false),
                 Arguments.of("Last Character Newline", "New Line\\n", false),
-                Arguments.of("Last Character Newline", "New Line\\r", false)
+                Arguments.of("Last Character Newline", "New Line\\r", false),
+                Arguments.of("Trailing Newline", "\"abc\n\"", true)
         );
     }
 
@@ -226,7 +227,9 @@ public class LexerTests {
                 Arguments.of("Question", "?", true),
                 Arguments.of("Colon", ":", true),
                 Arguments.of("Semicolon", ";", true),
-                Arguments.of("Hash", "#", true)
+                Arguments.of("Hash", "#", true),
+                Arguments.of("Space", " ", false),
+                Arguments.of("Tab", "\t", false)
         );
     }
 
@@ -272,6 +275,11 @@ public class LexerTests {
                         new Token(Token.Type.OPERATOR, "-", 24),
                         new Token(Token.Type.INTEGER, "2", 26),
                         new Token(Token.Type.OPERATOR, ";", 27)
+                )),
+                Arguments.of("Example 5: Is Whitespace", "\b", Arrays.asList(
+                )),
+                Arguments.of("Example 6: Leading and trailing tabs", "\ttab\t", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "tab", 1)
                 ))
         );
     }

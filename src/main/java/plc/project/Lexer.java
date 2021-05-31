@@ -33,7 +33,8 @@ public final class Lexer {
         List<Token> tokens = new ArrayList<Token>();
         while ( chars.has(0) ) {
             handleWhitespace();
-            tokens.add(lexToken());
+            if (chars.has(0))
+                tokens.add(lexToken());
         }
         return tokens;
     }
@@ -119,7 +120,7 @@ public final class Lexer {
         return false;
     }
     public void handleWhitespace() {
-        while( match("\\s") );
+        while( match("\\s") || match("[\b]") );
         chars.skip();
     }
     /**
