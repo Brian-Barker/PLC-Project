@@ -280,6 +280,19 @@ public class LexerTests {
                 )),
                 Arguments.of("Example 6: Leading and trailing tabs", "\ttab\t", Arrays.asList(
                         new Token(Token.Type.IDENTIFIER, "tab", 1)
+                )),
+                Arguments.of("Example 7: Whitespace", "one\btwo", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 4)
+                )),
+                Arguments.of("Example 8: Tab", "  Tab ", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "Tab", 2)
+                )),
+                Arguments.of("Example 9: Leading and trailing newlines", "\nNewline\n", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "Newline", 1)
+                )),
+                Arguments.of("Example 10: Leading and trailing return", "\rReturn\r", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "Return", 1)
                 ))
         );
     }
