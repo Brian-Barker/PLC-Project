@@ -1,6 +1,7 @@
 package plc.project;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -104,7 +105,10 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     public Ast.Expr parseExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        //throw new UnsupportedOperationException(); //TODO
+
+        // Temporary
+        return parsePrimaryExpression();
     }
 
     /**
@@ -149,7 +153,40 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expr parsePrimaryExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        // TODO: Check matches and finish returns
+        if (match("TRUE")) {
+            return new Ast.Expr.Literal(true);
+        }
+        else if (match("FALSE")) {
+            return new Ast.Expr.Literal(false);
+        }
+        else if (match(Token.Type.IDENTIFIER)) {
+            String name = tokens.get(-1).getLiteral();
+            return new Ast.Expr.Access(Optional.empty(), name);
+        }
+        else if (match(Token.Type.INTEGER)) {
+            return new Ast.Expr.
+        }
+        else if (match(Token.Type.DECIMAL)) {
+            return new Ast.Expr.
+        }
+        else if (match(Token.Type.CHARACTER)) {
+            return new Ast.Expr.
+        }
+        else if (match(Token.Type.STRING)) {
+            return new Ast.Expr.
+        }
+        else if (match('(')) {
+            Ast.Expr expr = parseExpression();
+            if (!match(')')) {
+                throw new ParseException("Expected closing parenthesis.", -1);
+            }
+            return new Ast.Expr.Group(expr);
+        }
+        else {
+            throw new ParseException("Invalid Primary Expression", -1);
+            // TODO: handle storing the actual character index instead of -1
+        }
     }
 
     /**
