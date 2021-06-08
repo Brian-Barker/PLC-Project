@@ -175,13 +175,11 @@ public final class Parser {
             return new Ast.Expr.Literal(num);
         }
         else if (match(Token.Type.CHARACTER)) {
-            String character = tokens.get(-1).getLiteral();
-            char returnChar = character.charAt(1);
-            return new Ast.Expr.Literal(returnChar);
+            String character = replaceEscape( tokens.get(-1).getLiteral() );
+            return new Ast.Expr.Literal(character.charAt(1));
         }
         else if (match(Token.Type.STRING)) {
-            String str = tokens.get(-1).getLiteral();
-            str = str.replaceAll("\"", "");
+            String str = replaceEscape( tokens.get(-1).getLiteral().replaceAll("\"", "") );
             return new Ast.Expr.Literal(str);
         }
         else if (match('(')) {
@@ -197,6 +195,15 @@ public final class Parser {
         }
     }
 
+    private String replaceEscape(String str) {
+        return str.replaceAll("\\\\b", "\b")
+                .replaceAll("\\\\n", "\n")
+                .replaceAll("\\\\r", "\r")
+                .replaceAll("\\\\t", "\t")
+                .replaceAll("\\\\'", "\'")
+                .replaceAll("\\\\\"", "\"")
+                .replaceAll("\\\\\\\\", "\\\\");
+    }
     /**
      * As in the lexer, returns {@code true} if the current sequence of tokens
      * matches the given patterns. Unlike the lexer, the pattern is not a regex;
