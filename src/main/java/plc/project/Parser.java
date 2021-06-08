@@ -190,8 +190,7 @@ public final class Parser {
             return new Ast.Expr.Group(expr);
         }
         else {
-            throw new ParseException("Invalid Primary Expression", -1);
-            // TODO: handle storing the actual character index instead of -1
+            throw new ParseException("Invalid Primary Expression", tokens.index);
         }
     }
 
