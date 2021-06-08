@@ -171,7 +171,7 @@ public final class Parser {
             BigInteger num = new BigInteger(tokens.get(-1).getLiteral());
             return new Ast.Expr.Literal(num);
         }
-        /*else if (match(Token.Type.DECIMAL)) {
+        else if (match(Token.Type.DECIMAL)) {
             return new Ast.Expr.
         }
         else if (match(Token.Type.CHARACTER)) {
@@ -186,7 +186,7 @@ public final class Parser {
                 throw new ParseException("Expected closing parenthesis.", -1);
             }
             return new Ast.Expr.Group(expr);
-        }*/
+        }
         else {
             throw new ParseException("Invalid Primary Expression", -1);
             // TODO: handle storing the actual character index instead of -1
