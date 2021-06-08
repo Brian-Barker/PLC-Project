@@ -162,6 +162,9 @@ public final class Parser {
         else if (match("FALSE")) {
             return new Ast.Expr.Literal(false);
         }
+        else if (match("NIL")) {
+            return new Ast.Expr.Literal(null);
+        }
         else if (match(Token.Type.IDENTIFIER)) {
             String name = tokens.get(-1).getLiteral();
             return new Ast.Expr.Access(Optional.empty(), name);
@@ -190,8 +193,8 @@ public final class Parser {
             return new Ast.Expr.Group(expr);
         }
         else {
-            throw new ParseException("Invalid Primary Expression", -1);
             // TODO: handle storing the actual character index instead of -1
+            throw new ParseException("Invalid Primary Expression", tokens.index);
         }
     }
 
