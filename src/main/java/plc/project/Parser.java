@@ -178,8 +178,8 @@ public final class Parser {
             return new Ast.Expr.Literal(num);
         }
         else if (match(Token.Type.CHARACTER)) {
-            String character = replaceEscape( tokens.get(-1).getLiteral() );
-            return new Ast.Expr.Literal(character.charAt(1));
+            String character = replaceEscape( tokens.get(-1).getLiteral().replaceAll("'", "") );
+            return new Ast.Expr.Literal(character.charAt(0));
         }
         else if (match(Token.Type.STRING)) {
             String str = replaceEscape( tokens.get(-1).getLiteral().replaceAll("\"", "") );
@@ -193,7 +193,6 @@ public final class Parser {
             return new Ast.Expr.Group(expr);
         }
         else {
-            // TODO: handle storing the actual character index instead of -1
             throw new ParseException("Invalid Primary Expression", tokens.index);
         }
     }
