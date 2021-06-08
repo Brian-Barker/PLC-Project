@@ -2,6 +2,9 @@ package plc.project;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigInteger;
+import java.math.BigDecimal;
+
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -165,9 +168,10 @@ public final class Parser {
             return new Ast.Expr.Access(Optional.empty(), name);
         }
         else if (match(Token.Type.INTEGER)) {
-            return new Ast.Expr.
+            BigInteger num = new BigInteger(tokens.get(-1).getLiteral());
+            return new Ast.Expr.Literal(num);
         }
-        else if (match(Token.Type.DECIMAL)) {
+        /*else if (match(Token.Type.DECIMAL)) {
             return new Ast.Expr.
         }
         else if (match(Token.Type.CHARACTER)) {
@@ -182,7 +186,7 @@ public final class Parser {
                 throw new ParseException("Expected closing parenthesis.", -1);
             }
             return new Ast.Expr.Group(expr);
-        }
+        }*/
         else {
             throw new ParseException("Invalid Primary Expression", -1);
             // TODO: handle storing the actual character index instead of -1
