@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.math.BigInteger;
 import java.math.BigDecimal;
 
-
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
  * into a structured representation of the program, called the Abstract Syntax
@@ -172,13 +171,18 @@ public final class Parser {
             return new Ast.Expr.Literal(num);
         }
         else if (match(Token.Type.DECIMAL)) {
-            return new Ast.Expr.
+            BigDecimal num = new BigDecimal(tokens.get(-1).getLiteral());
+            return new Ast.Expr.Literal(num);
         }
         else if (match(Token.Type.CHARACTER)) {
-            return new Ast.Expr.
+            String character = tokens.get(-1).getLiteral();
+            char returnChar = character.charAt(1);
+            return new Ast.Expr.Literal(returnChar);
         }
         else if (match(Token.Type.STRING)) {
-            return new Ast.Expr.
+            String str = tokens.get(-1).getLiteral();
+            str = str.replaceAll("\"", "");
+            return new Ast.Expr.Literal(str);
         }
         else if (match('(')) {
             Ast.Expr expr = parseExpression();
