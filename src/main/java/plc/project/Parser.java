@@ -252,7 +252,7 @@ public final class Parser {
     public Ast.Expr parseSecondaryExpression() throws ParseException {
         Ast.Expr left = parsePrimaryExpression();
 
-        if (match(".")) {
+        if (match("\\.")) {
             Ast.Expr ident = parsePrimaryExpression();
             String identName = tokens.get(-1).getLiteral();
 
