@@ -296,8 +296,9 @@ public final class Parser {
 
             if (match("(")) {
                 List<Ast.Expr> expressList = new ArrayList<>();
-                while (tokens.has(tokens.index) && !match(")")) {
+                while (tokens.has(0) && !peek(")")) {
                     Ast.Expr expression = parseExpression();
+                    expressList.add(expression);
                     if (!match(",")) {
                         break;
                     }
