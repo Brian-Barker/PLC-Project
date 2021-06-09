@@ -272,7 +272,7 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expr parsePrimaryExpression() throws ParseException {
-        // TODO: Check matches and finish returns
+        // Check matches and finish returns
         if (match("TRUE")) {
             return new Ast.Expr.Literal(true);
         }
@@ -287,26 +287,14 @@ public final class Parser {
 
             if (match("(")) {
                 List<Ast.Expr> expressList = new ArrayList<>();
-                Ast.Expr express1 = parseExpression();
-//                if (express1.toString() == null) {
-//                    return new Ast.Expr.Function(Optional.empty(), name, );
-//                }
-                expressList.add(express1);
-
-                if (match(",")) {
-                    Ast.Expr express2 = parseExpression();
-                    expressList.add(express2);
-
-                    if (match(",")) {
-                        Ast.Expr express3 = parseExpression();
-                        expressList.add(express3);
-
-                        return new Ast.Expr.Function(Optional.empty(), name, expressList);
+                while (tokens.has(tokens.index) && !match(")")) {
+                    Ast.Expr expression = parseExpression();
+                    if (!match(",")) {
+                        break;
                     }
-                    return new Ast.Expr.Function(Optional.empty(), name, expressList);
                 }
                 if (!match(")")) {
-                    throw new ParseException("Expected closing parenthesis.", -1);
+                    throw new ParseException("Expected closing parenthesis.", tokens.index);
                 }
                 return new Ast.Expr.Function(Optional.empty(), name, expressList);
             }
