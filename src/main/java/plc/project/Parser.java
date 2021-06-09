@@ -108,9 +108,21 @@ public final class Parser {
      */
     public Ast.Expr parseExpression() throws ParseException {
         //throw new UnsupportedOperationException(); //TODO
+        Ast.Expr left = parseLogicalExpression();
+        String logical;
 
-        // Temporary
-        return parseLogicalExpression();
+        if (match("=")) {
+            Ast.Expr right = parseLogicalExpression();
+
+            //return new Ast.Stmt.Assignment();
+
+
+//            String right = tokens.get(-1).getLiteral();
+//
+//            return new Ast.Expr.Access(Optional.empty(), right);
+        }
+
+        return left;
     }
 
     /**
@@ -280,9 +292,9 @@ public final class Parser {
             String str = replaceEscape( tokens.get(-1).getLiteral().replaceAll("\"", "") );
             return new Ast.Expr.Literal(str);
         }
-        else if (match('(')) {
+        else if (match("(")) {
             Ast.Expr expr = parseExpression();
-            if (!match(')')) {
+            if (!match(")")) {
                 throw new ParseException("Expected closing parenthesis.", -1);
             }
             return new Ast.Expr.Group(expr);
