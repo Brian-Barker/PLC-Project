@@ -1,5 +1,6 @@
 package plc.project;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.math.BigInteger;
@@ -110,17 +111,6 @@ public final class Parser {
         //throw new UnsupportedOperationException(); //TODO
         Ast.Expr left = parseLogicalExpression();
         String logical;
-
-        if (match("=")) {
-            Ast.Expr right = parseLogicalExpression();
-
-            //return new Ast.Stmt.Assignment();
-
-
-//            String right = tokens.get(-1).getLiteral();
-//
-//            return new Ast.Expr.Access(Optional.empty(), right);
-        }
 
         return left;
     }
@@ -252,7 +242,27 @@ public final class Parser {
     public Ast.Expr parseSecondaryExpression() throws ParseException {
         //throw new UnsupportedOperationException(); //TODO
 
-        return parsePrimaryExpression();
+        Ast.Expr left = parsePrimaryExpression();
+
+        if (match(".")) {
+            Ast.Expr ident = parsePrimaryExpression();
+            String identName = tokens.get(-1).getLiteral();
+
+            if (match("(")) {
+                Ast.Expr express1 = parseExpression();
+                String expressName1 = tokens.get(-1).getLiteral();
+
+                if (match(",")) {
+                    Ast.Expr express2 = parseExpression();
+                    String expressName2 = tokens.get(-1).getLiteral();
+
+                    return new Ast.Expr.Access(Optional.of(express1), expressName2);
+                }
+                return new Ast.Expr.Access(Optional.of(ident), expressName1);
+            }
+            return new Ast.Expr.Access(Optional.of(left), identName);
+        }
+        return left;
     }
 
     /**
@@ -274,6 +284,32 @@ public final class Parser {
         }
         else if (match(Token.Type.IDENTIFIER)) {
             String name = tokens.get(-1).getLiteral();
+
+            if (match("(")) {
+                List<Ast.Expr> expressList = new ArrayList<>();
+                Ast.Expr express1 = parseExpression();
+//                if (express1.toString() == null) {
+//                    return new Ast.Expr.Function(Optional.empty(), name, );
+//                }
+                expressList.add(express1);
+
+                if (match(",")) {
+                    Ast.Expr express2 = parseExpression();
+                    expressList.add(express2);
+
+                    if (match(",")) {
+                        Ast.Expr express3 = parseExpression();
+                        expressList.add(express3);
+
+                        return new Ast.Expr.Function(Optional.empty(), name, expressList);
+                    }
+                    return new Ast.Expr.Function(Optional.empty(), name, expressList);
+                }
+                if (!match(")")) {
+                    throw new ParseException("Expected closing parenthesis.", -1);
+                }
+                return new Ast.Expr.Function(Optional.empty(), name, expressList);
+            }
             return new Ast.Expr.Access(Optional.empty(), name);
         }
         else if (match(Token.Type.INTEGER)) {
