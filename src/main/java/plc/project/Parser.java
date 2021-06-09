@@ -62,9 +62,8 @@ public final class Parser {
             Ast.Expr right = parseExpression();
             return new Ast.Stmt.Assignment(left, right);
         }
-        if (match("(")) {
-            Ast.Expr right = parseExpression();
-            return new Ast.Stmt.Expression(right);
+        if (match(";")) {
+            return new Ast.Stmt.Expression(left);
         }
 
         throw new UnsupportedOperationException(); //TODO
