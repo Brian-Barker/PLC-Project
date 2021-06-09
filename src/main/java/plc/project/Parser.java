@@ -56,6 +56,17 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Stmt parseStatement() throws ParseException {
+        Ast.Expr left = parseExpression();
+
+        if (match("=")) {
+            Ast.Expr right = parseExpression();
+            return new Ast.Stmt.Assignment(left, right);
+        }
+        if (match("(")) {
+            Ast.Expr right = parseExpression();
+            return new Ast.Stmt.Expression(right);
+        }
+
         throw new UnsupportedOperationException(); //TODO
     }
 
@@ -240,8 +251,6 @@ public final class Parser {
      * Parses the {@code secondary-expression} rule.
      */
     public Ast.Expr parseSecondaryExpression() throws ParseException {
-        //throw new UnsupportedOperationException(); //TODO
-
         Ast.Expr left = parsePrimaryExpression();
 
         if (match(".")) {
@@ -272,7 +281,6 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expr parsePrimaryExpression() throws ParseException {
-        // TODO: Check matches and finish returns
         if (match("TRUE")) {
             return new Ast.Expr.Literal(true);
         }
@@ -287,28 +295,22 @@ public final class Parser {
 
             if (match("(")) {
                 List<Ast.Expr> expressList = new ArrayList<>();
+                express
+                if (express1.toString() == null) {
+                    int i = 0;
+                    //return new Ast.Expr.Function(Optional.empty(), name, );
+                }
                 Ast.Expr express1 = parseExpression();
-//                if (express1.toString() == null) {
-//                    return new Ast.Expr.Function(Optional.empty(), name, );
-//                }
                 expressList.add(express1);
 
-                if (match(",")) {
-                    Ast.Expr express2 = parseExpression();
-                    expressList.add(express2);
+                while (!match(")")) {
 
-                    if (match(",")) {
-                        Ast.Expr express3 = parseExpression();
-                        expressList.add(express3);
 
-                        return new Ast.Expr.Function(Optional.empty(), name, expressList);
+                    if (!match(")")) {
+                        throw new ParseException("Expected closing parenthesis.", -1);
                     }
                     return new Ast.Expr.Function(Optional.empty(), name, expressList);
                 }
-                if (!match(")")) {
-                    throw new ParseException("Expected closing parenthesis.", -1);
-                }
-                return new Ast.Expr.Function(Optional.empty(), name, expressList);
             }
             return new Ast.Expr.Access(Optional.empty(), name);
         }
