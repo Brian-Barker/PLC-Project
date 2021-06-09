@@ -250,25 +250,32 @@ public final class Parser {
      * Parses the {@code secondary-expression} rule.
      */
     public Ast.Expr parseSecondaryExpression() throws ParseException {
+        List<Ast.Expr> expressList = new ArrayList<>();
         Ast.Expr left = parsePrimaryExpression();
+        expressList.add(left);
 
-        if (match(".")) {
+        if (match("\\.")) {
             Ast.Expr ident = parsePrimaryExpression();
+            expressList.add(ident);
             String identName = tokens.get(-1).getLiteral();
 
             if (match("(")) {
                 Ast.Expr express1 = parseExpression();
+                expressList.add(express1);
                 String expressName1 = tokens.get(-1).getLiteral();
 
                 if (match(",")) {
                     Ast.Expr express2 = parseExpression();
+                    expressList.add(express2);
                     String expressName2 = tokens.get(-1).getLiteral();
 
-                    return new Ast.Expr.Access(Optional.of(express1), expressName2);
+                    //return new Ast.Expr.Access(Optional.of(express1), expressName2);
+                    return new Ast.Expr.Function(Optional.of(express1), expressName2, expressList);
                 }
-                return new Ast.Expr.Access(Optional.of(ident), expressName1);
+                //return new Ast.Expr.Access(Optional.of(ident), expressName1);
+                return new Ast.Expr.Function(Optional.of(ident), expressName1, expressList);
             }
-            return new Ast.Expr.Access(Optional.of(left), identName);
+            return new Ast.Expr.Function(Optional.of(left), identName, expressList);
         }
         return left;
     }
