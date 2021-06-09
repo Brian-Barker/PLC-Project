@@ -227,7 +227,7 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ".", 11),
                                 new Token(Token.Type.IDENTIFIER, "field2", 12)
                         ),
-                        new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "field")
+                        new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj1")), "field1")), "field2")
                 )
         );
     }
