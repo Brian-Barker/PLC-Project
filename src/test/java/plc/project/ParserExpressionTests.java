@@ -217,6 +217,17 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "field", 4)
                         ),
                         new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "field")
+                ),
+                Arguments.of("Multiple Field Access",
+                        Arrays.asList(
+                                //obj.field
+                                new Token(Token.Type.IDENTIFIER, "obj1", 0),
+                                new Token(Token.Type.OPERATOR, ".", 4),
+                                new Token(Token.Type.IDENTIFIER, "field1", 5),
+                                new Token(Token.Type.OPERATOR, ".", 11),
+                                new Token(Token.Type.IDENTIFIER, "field2", 12)
+                        ),
+                        new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "field")
                 )
         );
     }
