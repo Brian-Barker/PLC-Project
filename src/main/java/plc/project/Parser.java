@@ -56,6 +56,17 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Stmt parseStatement() throws ParseException {
+        Ast.Expr left = parseExpression();
+
+        if (match("=")) {
+            Ast.Expr right = parseExpression();
+            return new Ast.Stmt.Assignment(left, right);
+        }
+        if (match("(")) {
+            Ast.Expr right = parseExpression();
+            return new Ast.Stmt.Expression(right);
+        }
+
         throw new UnsupportedOperationException(); //TODO
     }
 
@@ -240,8 +251,6 @@ public final class Parser {
      * Parses the {@code secondary-expression} rule.
      */
     public Ast.Expr parseSecondaryExpression() throws ParseException {
-        //throw new UnsupportedOperationException(); //TODO
-
         Ast.Expr left = parsePrimaryExpression();
 
         if (match(".")) {
