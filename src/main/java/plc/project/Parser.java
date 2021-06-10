@@ -227,7 +227,7 @@ public final class Parser {
      * Parses the {@code multiplicative-expression} rule.
      */
     public Ast.Expr parseMultiplicativeExpression() throws ParseException {
-        Ast.Expr left = parseSecondaryExpression();
+        Ast.Expr left = parseSecondaryExpression(null);
         String multiplicative;
 
         if (match("*")) {
@@ -249,15 +249,15 @@ public final class Parser {
     /**
      * Parses the {@code secondary-expression} rule.
      */
-    public Ast.Expr parseSecondaryExpression() throws ParseException {
-        Ast.Expr secondaryExpr = parsePrimaryExpression();
+    public Ast.Expr parseSecondaryExpression(Ast.Expr previousRef) throws ParseException {
+        Ast.Expr primaryExpr = parsePrimaryExpression(previousRef);
         String identName = tokens.get(-1).getLiteral();
 
         if (match(".")) {
-            return new Ast.Expr.Access(Optional.of(parseSecondaryExpression()), identName);
+            return parseSecondaryExpression(primaryExpr);
+        } else {
+            return primaryExpr;
         }
-
-        return secondaryExpr;
     }
 
     /**
@@ -266,7 +266,7 @@ public final class Parser {
      * functions. It may be helpful to break these up into other methods but is
      * not strictly necessary.
      */
-    public Ast.Expr parsePrimaryExpression() throws ParseException {
+    public Ast.Expr parsePrimaryExpression(Ast.Expr previousRef) throws ParseException {
         // Check matches and finish returns
         if (match("TRUE")) {
             return new Ast.Expr.Literal(true);
@@ -292,9 +292,17 @@ public final class Parser {
                 if (!match(")")) {
                     throw new ParseException("Expected closing parenthesis.", tokens.index);
                 }
-                return new Ast.Expr.Function(Optional.empty(), name, expressList);
+                if (previousRef == null) {
+                    return new Ast.Expr.Function(Optional.empty(), name, expressList);
+                } else {
+                    return new Ast.Expr.Function(Optional.of(previousRef), name, expressList);
+                }
             }
-            return new Ast.Expr.Access(Optional.empty(), name);
+            if (previousRef == null) {
+                return new Ast.Expr.Access(Optional.empty(), name);
+            } else {
+                return new Ast.Expr.Access(Optional.of(previousRef), name);
+            }
         }
         else if (match(Token.Type.INTEGER)) {
             BigInteger num = new BigInteger(tokens.get(-1).getLiteral());
