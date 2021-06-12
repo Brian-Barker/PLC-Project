@@ -61,6 +61,7 @@ public final class Parser {
         if (match("=")) {
             Ast.Expr right = parseExpression();
             if (match(";")) {
+                System.out.print("Entered Semi Colon Check");
                 return new Ast.Stmt.Assignment(left, right);
             }
         } else if (match(";")) {
@@ -120,7 +121,6 @@ public final class Parser {
      */
     public Ast.Expr parseExpression() throws ParseException {
         Ast.Expr left = parseLogicalExpression();
-        String logical;
 
         return left;
     }
