@@ -120,6 +120,8 @@ public final class Parser {
     public Ast.Expr parseExpression() throws ParseException {
         Ast.Expr left = parseLogicalExpression();
 
+
+
         return left;
     }
 
@@ -277,6 +279,9 @@ public final class Parser {
         }
         else if (match(Token.Type.IDENTIFIER)) {
             String name = tokens.get(-1).getLiteral();
+            if (name.matches("\\d+")) {
+                throw new ParseException("Invalid Name.", tokens.index);
+            }
 
             if (match("(")) {
                 List<Ast.Expr> expressList = new ArrayList<>();
