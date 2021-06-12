@@ -227,7 +227,7 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
                 ),
-                Arguments.of("Binary AND OR",
+                Arguments.of("Binary AND OR EXPR2",
                         Arrays.asList(
                                 //expr1 AND OR expr2
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),

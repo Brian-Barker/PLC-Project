@@ -61,13 +61,11 @@ public final class Parser {
         if (match("=")) {
             Ast.Expr right = parseExpression();
             if (match(";")) {
-                System.out.print("Entered Semi Colon Check");
                 return new Ast.Stmt.Assignment(left, right);
             }
         } else if (match(";")) {
             return new Ast.Stmt.Expression(left);
         }
-
         throw new ParseException("Missing Semicolon", tokens.index);
     }
 
