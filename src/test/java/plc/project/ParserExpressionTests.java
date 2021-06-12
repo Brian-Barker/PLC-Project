@@ -37,6 +37,15 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ";", 6)
                         ),
                         new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList()))
+                ),
+                Arguments.of("Missing Semicolon (Should Fail)",
+                        Arrays.asList(
+                                //name();
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.OPERATOR, ")", 5)
+                        ),
+                        new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList()))
                 )
         );
     }
@@ -267,6 +276,18 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr3")
                         ))
                 ),
+                Arguments.of("Single Argument",
+                        Arrays.asList(
+                                //name(expr1)
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 5),
+                                new Token(Token.Type.OPERATOR, ")", 10)
+                        ),
+                        new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList(
+                                new Ast.Expr.Access(Optional.empty(), "expr1")
+                        ))
+                ),
                 Arguments.of("Method Call",
                         Arrays.asList(
                                 //obj.method()
@@ -277,6 +298,19 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ")", 11)
                         ),
                         new Ast.Expr.Function(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "method", Arrays.asList())
+                ),
+                Arguments.of("Trailing Comma (Should fail)",
+                        Arrays.asList(
+                                //method()
+                                new Token(Token.Type.IDENTIFIER, "method", 0),
+                                new Token(Token.Type.OPERATOR, "(", 6),
+                                new Token(Token.Type.IDENTIFIER, "field", 7),
+                                new Token(Token.Type.OPERATOR, ",", 12),
+                                new Token(Token.Type.OPERATOR, ")", 13)
+                        ),
+                        new Ast.Expr.Function(Optional.empty(), "method", Arrays.asList(
+                                new Ast.Expr.Access(Optional.empty(), "field")
+                        ))
                 )
         );
     }

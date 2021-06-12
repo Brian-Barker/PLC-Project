@@ -60,13 +60,14 @@ public final class Parser {
 
         if (match("=")) {
             Ast.Expr right = parseExpression();
-            return new Ast.Stmt.Assignment(left, right);
-        }
-        if (match(";")) {
+            if (match(";")) {
+                return new Ast.Stmt.Assignment(left, right);
+            }
+        } else if (match(";")) {
             return new Ast.Stmt.Expression(left);
         }
 
-        throw new UnsupportedOperationException(); //TODO
+        throw new ParseException("Missing Semicolon", tokens.index);
     }
 
     /**
@@ -118,7 +119,6 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     public Ast.Expr parseExpression() throws ParseException {
-        //throw new UnsupportedOperationException(); //TODO
         Ast.Expr left = parseLogicalExpression();
         String logical;
 
@@ -287,6 +287,10 @@ public final class Parser {
                     expressList.add(expression);
                     if (!match(",")) {
                         break;
+                    } else {
+                        if (!peek(Token.Type.IDENTIFIER)) {
+                            throw new ParseException("Expected identifier.", tokens.index);
+                        }
                     }
                 }
                 if (!match(")")) {
@@ -323,7 +327,7 @@ public final class Parser {
         else if (match("(")) {
             Ast.Expr expr = parseExpression();
             if (!match(")")) {
-                throw new ParseException("Expected closing parenthesis.", -1);
+                throw new ParseException("Expected closing parenthesis.", tokens.index);
             }
             return new Ast.Expr.Group(expr);
         }
