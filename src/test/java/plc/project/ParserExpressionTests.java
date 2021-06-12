@@ -37,16 +37,16 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ";", 6)
                         ),
                         new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList()))
+                ),
+                Arguments.of("Missing Semicolon (Should Fail)",
+                        Arrays.asList(
+                                //name();
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.OPERATOR, ")", 5)
+                        ),
+                        new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList()))
                 )
-//                Arguments.of("Missing Semicolon (Should Fail)",
-//                        Arrays.asList(
-//                                //name();
-//                                new Token(Token.Type.IDENTIFIER, "name", 0),
-//                                new Token(Token.Type.OPERATOR, "(", 4),
-//                                new Token(Token.Type.OPERATOR, ")", 5)
-//                        ),
-//                        new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList()))
-//                )
         );
     }
 
@@ -227,7 +227,7 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
                 ),
-                Arguments.of("Binary AND OR",
+                Arguments.of("Binary AND OR (Should Fail)",
                         Arrays.asList(
                                 //expr1 AND OR expr2
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),
@@ -236,6 +236,20 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "expr2", 13)
                         ),
                         new Ast.Expr.Binary("AND",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Missing Parenthesis (Should Fail)",
+                        Arrays.asList(
+                                //(expr1 + expr2
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                                new Token(Token.Type.OPERATOR, "+", 7),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                                new Token(Token.Type.IDENTIFIER, ")", 14)
+                        ),
+                        new Ast.Expr.Binary("+",
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
@@ -274,6 +288,10 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "field2", 12)
                         ),
                         new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj1")), "field1")), "field2")
+                ),
+                Arguments.of("Invalid Name (Should Fail)",
+                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "5", 0)),
+                        new Ast.Expr.Access(Optional.empty(), "5")
                 )
         );
     }
@@ -335,20 +353,20 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ")", 11)
                         ),
                         new Ast.Expr.Function(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "method", Arrays.asList())
+                ),
+                Arguments.of("Trailing Comma (Should fail)",
+                        Arrays.asList(
+                                //method()
+                                new Token(Token.Type.IDENTIFIER, "method", 0),
+                                new Token(Token.Type.OPERATOR, "(", 6),
+                                new Token(Token.Type.IDENTIFIER, "field", 7),
+                                new Token(Token.Type.OPERATOR, ",", 12),
+                                new Token(Token.Type.OPERATOR, ")", 13)
+                        ),
+                        new Ast.Expr.Function(Optional.empty(), "method", Arrays.asList(
+                                new Ast.Expr.Access(Optional.empty(), "field")
+                        ))
                 )
-//                Arguments.of("Trailing Comma (Should fail)",
-//                        Arrays.asList(
-//                                //method()
-//                                new Token(Token.Type.IDENTIFIER, "method", 0),
-//                                new Token(Token.Type.OPERATOR, "(", 6),
-//                                new Token(Token.Type.IDENTIFIER, "field", 7),
-//                                new Token(Token.Type.OPERATOR, ",", 12),
-//                                new Token(Token.Type.OPERATOR, ")", 13)
-//                        ),
-//                        new Ast.Expr.Function(Optional.empty(), "method", Arrays.asList(
-//                                new Ast.Expr.Access(Optional.empty(), "field")
-//                        ))
-//                )
         );
     }
 
