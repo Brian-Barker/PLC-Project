@@ -82,17 +82,33 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testLiteralExpression() {
         return Stream.of(
-                Arguments.of("Boolean Literal",
+                Arguments.of("Boolean Literal True",
                         Arrays.asList(new Token(Token.Type.IDENTIFIER, "TRUE", 0)),
                         new Ast.Expr.Literal(Boolean.TRUE)
+                ),
+                Arguments.of("Boolean Literal False (Added)",
+                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "FALSE", 0)),
+                        new Ast.Expr.Literal(Boolean.FALSE)
+                ),
+                Arguments.of("Literal NIL (Added)",
+                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "NIL", 0)),
+                        new Ast.Expr.Literal(null)
                 ),
                 Arguments.of("Integer Literal",
                         Arrays.asList(new Token(Token.Type.INTEGER, "1", 0)),
                         new Ast.Expr.Literal(new BigInteger("1"))
                 ),
+                Arguments.of("Integer Literal (Added)",
+                        Arrays.asList(new Token(Token.Type.INTEGER, "123456789123456789123456789", 0)),
+                        new Ast.Expr.Literal(new BigInteger("123456789123456789123456789"))
+                ),
                 Arguments.of("Decimal Literal",
                         Arrays.asList(new Token(Token.Type.DECIMAL, "2.0", 0)),
                         new Ast.Expr.Literal(new BigDecimal("2.0"))
+                ),
+                Arguments.of("Decimal Literal (Added)",
+                        Arrays.asList(new Token(Token.Type.DECIMAL, "123456789123456789123456789.9999999", 0)),
+                        new Ast.Expr.Literal(new BigDecimal("123456789123456789123456789.9999999"))
                 ),
                 Arguments.of("Character Literal",
                         Arrays.asList(new Token(Token.Type.CHARACTER, "'c'", 0)),
@@ -102,13 +118,65 @@ final class ParserExpressionTests {
                         Arrays.asList(new Token(Token.Type.STRING, "\"string\"", 0)),
                         new Ast.Expr.Literal("string")
                 ),
+                Arguments.of("String Literal (Added)",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"This is a string\"", 0)),
+                        new Ast.Expr.Literal("This is a string")
+                ),
+                Arguments.of("String Escape \b (ADDED)",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\bWorld!\"", 0)),
+                        new Ast.Expr.Literal("Hello,\bWorld!")
+                ),
                 Arguments.of("Escape Character in String",
                         Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
                         new Ast.Expr.Literal("Hello,\nWorld!")
                 ),
+                Arguments.of("String Escape \r (ADDED)",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\rWorld!\"", 0)),
+                        new Ast.Expr.Literal("Hello,\rWorld!")
+                ),
+                Arguments.of("String Escape \t (ADDED)",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\tWorld!\"", 0)),
+                        new Ast.Expr.Literal("Hello,\tWorld!")
+                ),
+                Arguments.of("String Escape \' (ADDED)",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\'World!\"", 0)),
+                        new Ast.Expr.Literal("Hello,\'World!")
+                ),
+                Arguments.of("String Escape \" (ADDED)",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\\"World!\"", 0)),
+                        new Ast.Expr.Literal("Hello,\"World!")
+                ),
+                Arguments.of("String Escape \\ (ADDED)",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\\\World!\"", 0)),
+                        new Ast.Expr.Literal("Hello,\\World!")
+                ),
+                Arguments.of("Escape Character \b (ADDED)",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\b'", 0)),
+                        new Ast.Expr.Literal('\b')
+                ),
                 Arguments.of("Escape Character",
                         Arrays.asList(new Token(Token.Type.CHARACTER, "'\\n'", 0)),
                         new Ast.Expr.Literal('\n')
+                ),
+                Arguments.of("Escape Character \r (ADDED)",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\r'", 0)),
+                        new Ast.Expr.Literal('\r')
+                ),
+                Arguments.of("Escape Character \t (ADDED)",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\t'", 0)),
+                        new Ast.Expr.Literal('\t')
+                ),
+                Arguments.of("Escape Character \' (ADDED)",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\''", 0)),
+                        new Ast.Expr.Literal('\'')
+                ),
+                Arguments.of("Escape Character \" (ADDED)",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\\"'", 0)),
+                        new Ast.Expr.Literal('\"')
+                ),
+                Arguments.of("Escape Character \\ (ADDED)",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\\\'", 0)),
+                        new Ast.Expr.Literal('\\')
                 )
         );
     }
@@ -143,6 +211,22 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         ))
+                ),
+                Arguments.of("Missing Closing Parenthesis (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //(expr1 + expr2)
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 1)
+                        ),
+                        new Ast.Expr.Group(new Ast.Expr.Access(Optional.empty(), "expr"))
+                ),
+                Arguments.of("Missing Expression (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //(expr1 + expr2)
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, ")", 1)
+                        ),
+                        new Ast.Expr.Group(new Ast.Expr.Access(Optional.empty(), "empty"))
                 )
         );
     }
@@ -167,6 +251,66 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
                 ),
+                Arguments.of("Binary Or (ADDED)",
+                        Arrays.asList(
+                                //expr1 OR expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "OR", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9)
+                        ),
+                        new Ast.Expr.Binary("OR",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Less Than (ADDED)",
+                        Arrays.asList(
+                                //expr1 < expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "<", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
+                        ),
+                        new Ast.Expr.Binary("<",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Less Than Equal To (ADDED)",
+                        Arrays.asList(
+                                //expr1 <= expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "<=", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9)
+                        ),
+                        new Ast.Expr.Binary("<=",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Greater Than (ADDED)",
+                        Arrays.asList(
+                                //expr1 < expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, ">", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
+                        ),
+                        new Ast.Expr.Binary(">",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Greater Than Equal To (ADDED)",
+                        Arrays.asList(
+                                //expr1 <= expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, ">=", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9)
+                        ),
+                        new Ast.Expr.Binary(">=",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
                 Arguments.of("Binary Equality",
                         Arrays.asList(
                                 //expr1 == expr2
@@ -175,30 +319,6 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "expr2", 9)
                         ),
                         new Ast.Expr.Binary("==",
-                                new Ast.Expr.Access(Optional.empty(), "expr1"),
-                                new Ast.Expr.Access(Optional.empty(), "expr2")
-                        )
-                ),
-                Arguments.of("Binary Addition",
-                        Arrays.asList(
-                                //expr1 + expr2
-                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "+", 6),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
-                        ),
-                        new Ast.Expr.Binary("+",
-                                new Ast.Expr.Access(Optional.empty(), "expr1"),
-                                new Ast.Expr.Access(Optional.empty(), "expr2")
-                        )
-                ),
-                Arguments.of("Binary Multiplication",
-                        Arrays.asList(
-                                //expr1 * expr2
-                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "*", 6),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
-                        ),
-                        new Ast.Expr.Binary("*",
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
@@ -215,14 +335,50 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
                 ),
-                Arguments.of("Binary Or",
+                Arguments.of("Binary Addition",
                         Arrays.asList(
-                                //expr1 OR expr2
+                                //expr1 + expr2
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.IDENTIFIER, "OR", 6),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 9)
+                                new Token(Token.Type.OPERATOR, "+", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
                         ),
-                        new Ast.Expr.Binary("OR",
+                        new Ast.Expr.Binary("+",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Subtraction (ADDED)",
+                        Arrays.asList(
+                                //expr1 + expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "-", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
+                        ),
+                        new Ast.Expr.Binary("-",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Multiplication",
+                        Arrays.asList(
+                                //expr1 * expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "*", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
+                        ),
+                        new Ast.Expr.Binary("*",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Division (ADDED)",
+                        Arrays.asList(
+                                //expr1 * expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "/", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
+                        ),
+                        new Ast.Expr.Binary("/",
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
@@ -250,6 +406,138 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, ")", 14)
                         ),
                         new Ast.Expr.Binary("+",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary And Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 AND
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "AND", 6)
+                        ),
+                        new Ast.Expr.Binary("AND",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Or Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 OR
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "OR", 6)
+                        ),
+                        new Ast.Expr.Binary("OR",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Less Than Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 <
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "<", 6)
+                        ),
+                        new Ast.Expr.Binary("<",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Less Than Equal To Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 <=
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "<=", 6)
+                        ),
+                        new Ast.Expr.Binary("<=",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Greater Than Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 < expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, ">", 6)
+                        ),
+                        new Ast.Expr.Binary(">",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Greater Than Equal To Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 <=
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, ">=", 6)
+                        ),
+                        new Ast.Expr.Binary(">=",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Equality Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 ==
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "==", 6)
+                        ),
+                        new Ast.Expr.Binary("==",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Inequality Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 !=
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "!=", 6)
+                        ),
+                        new Ast.Expr.Binary("!=",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Addition Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 +
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "+", 6)
+                        ),
+                        new Ast.Expr.Binary("+",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Subtraction Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 +
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "-", 6)
+                        ),
+                        new Ast.Expr.Binary("-",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Multiplication Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 *
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "*", 6)
+                        ),
+                        new Ast.Expr.Binary("*",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Division Missing Operand (ADDED) (SHOULD FAIL)",
+                        Arrays.asList(
+                                //expr1 *
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "/", 6)
+                        ),
+                        new Ast.Expr.Binary("/",
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
@@ -343,6 +631,21 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr1")
                         ))
                 ),
+                Arguments.of("Complex Argument (ADDED) (UNSURE)",
+                        Arrays.asList(
+                                //name(expr1/expr2)
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 5),
+                                new Token(Token.Type.OPERATOR, "/", 10),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 11),
+                                new Token(Token.Type.OPERATOR, ")", 16)
+                        ),
+                        new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList(
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        ))
+                ),
                 Arguments.of("Method Call",
                         Arrays.asList(
                                 //obj.method()
@@ -353,6 +656,18 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ")", 11)
                         ),
                         new Ast.Expr.Function(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "method", Arrays.asList())
+                ),
+                Arguments.of("Method Call One Argument (ADDED) (UNSURE ABOUT TEST CASE)",
+                        Arrays.asList(
+                                //obj.method()
+                                new Token(Token.Type.IDENTIFIER, "obj", 0),
+                                new Token(Token.Type.OPERATOR, ".", 3),
+                                new Token(Token.Type.IDENTIFIER, "method", 4),
+                                new Token(Token.Type.OPERATOR, "(", 10),
+                                new Token(Token.Type.OPERATOR, "x", 11),
+                                new Token(Token.Type.OPERATOR, ")", 12)
+                        ),
+                        new Ast.Expr.Function(Optional.of(new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "x")), "obj")), "method", Arrays.asList())
                 ),
                 Arguments.of("Trailing Comma (Should fail)",
                         Arrays.asList(

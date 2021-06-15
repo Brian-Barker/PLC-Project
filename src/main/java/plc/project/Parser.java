@@ -158,23 +158,6 @@ public final class Parser {
             }
             return new Ast.Stmt.Expression(left);
         }
-
-
-//        Ast.Expr left = parseExpression();
-//
-////        if (left.toString().equals("LET")) {
-////            return parseDeclarationStatement();
-////        }
-//
-//        if (match("=")) {
-//            Ast.Expr right = parseExpression();
-//            if (match(";")) {
-//                return new Ast.Stmt.Assignment(left, right);
-//            }
-//        } else if (match(";")) {
-//            return new Ast.Stmt.Expression(left);
-//        }
-//        throw new ParseException("Missing Semicolon", tokens.index);
     }
 
     /**
@@ -348,13 +331,7 @@ public final class Parser {
         Ast.Expr left = parseAdditiveExpression();
         String equality;
 
-        if (match(">")) {
-            equality = tokens.get(-1).getLiteral();
-            Ast.Expr right = parseAdditiveExpression();
-
-            return new Ast.Expr.Binary(equality, left, right);
-        }
-        else if (match("<=")) {
+        if (match("<")) {
             equality = tokens.get(-1).getLiteral();
             Ast.Expr right = parseAdditiveExpression();
 
