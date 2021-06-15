@@ -1,5 +1,6 @@
 package plc.project;
 
+import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +32,19 @@ public final class Parser {
      * Parses the {@code source} rule.
      */
     public Ast.Source parseSource() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Field> field1 = new ArrayList<>();
+        List<Ast.Method> method1 = new ArrayList<>();
+
+        if (peek("LET")) {
+            field1.add(parseField());
+        }
+
+        if (peek("DEF")) {
+            Ast.Method m1 = parseMethod();
+            method1.add(m1);
+        }
+
+        return new Ast.Source(field1, method1);
     }
 
     /**
@@ -39,7 +52,24 @@ public final class Parser {
      * next tokens start a field, aka {@code LET}.
      */
     public Ast.Field parseField() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+
+        match ("LET");
+        if (!match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected Identifier", tokens.index);
+        }
+        else {
+            String variable = tokens.get(-1).getLiteral();
+            Optional<Ast.Expr> value = Optional.empty();
+
+            if (match("=")) {
+                value = Optional.ofNullable(parseExpression());
+            }
+
+            if (!match(";")) {
+                throw new ParseException("Missing Semicolon", tokens.index);
+            }
+            return new Ast.Field(variable, value);
+        }
     }
 
     /**
@@ -47,7 +77,51 @@ public final class Parser {
      * next tokens start a method, aka {@code DEF}.
      */
     public Ast.Method parseMethod() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        String variable1;
+        List<String> str1 = new ArrayList<>();
+        List<Ast.Stmt> stmt1 = new ArrayList<>();
+
+        match("DEF");
+
+        if (!match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected Identifier", tokens.index);
+        }
+
+        variable1 = tokens.get(-1).getLiteral();
+
+        if (match("(")) {
+            if (!match(")")) {
+                // FLAG
+                throw new ParseException("Expected closing parenthesis.", tokens.index);
+            }
+            if (!peek("DO")) {
+                if (match(Token.Type.IDENTIFIER) && !peek("DO")) {
+                    str1.add(tokens.get(-1).getLiteral());
+
+                    if (match(",")) {
+                        if (match(Token.Type.IDENTIFIER)) {
+                            str1.add(tokens.get(-1).getLiteral());
+                        } else {
+                            throw new ParseException("Expected Identifier", tokens.index);
+                        }
+                    }
+                }
+            }
+            else if (match("DO")) {
+                Ast.Stmt s1 = parseStatement();
+                stmt1.add(s1);
+            }
+            else {
+                throw new ParseException("Expected DO", tokens.index);
+            }
+        }
+
+
+        if (!match("END")) {
+            throw new ParseException("Expected END", tokens.index);
+        }
+
+        return new Ast.Method(variable1, str1, stmt1);
     }
 
     /**
@@ -56,17 +130,51 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Stmt parseStatement() throws ParseException {
-        Ast.Expr left = parseExpression();
-
-        if (match("=")) {
-            Ast.Expr right = parseExpression();
-            if (match(";")) {
-                return new Ast.Stmt.Assignment(left, right);
+        if (peek("LET")) {
+            return parseDeclarationStatement();
+        }
+        else if (peek("IF")) {
+            return parseIfStatement();
+        }
+        else if (peek("FOR")) {
+            return parseForStatement();
+        }
+        else if (peek("WHILE")) {
+            return parseWhileStatement();
+        }
+        else if (peek("RETURN")) {
+            return parseReturnStatement();
+        }
+        else {
+            Ast.Expr left = parseExpression();
+            if (match("=")) {
+                Ast.Expr right = parseExpression();
+                if (match(";")) {
+                    return new Ast.Stmt.Assignment(left, right);
+                }
             }
-        } else if (match(";")) {
+            if (!match(";")) {
+                throw new ParseException("Missing Semicolon", tokens.index);
+            }
             return new Ast.Stmt.Expression(left);
         }
-        throw new ParseException("Missing Semicolon", tokens.index);
+
+
+//        Ast.Expr left = parseExpression();
+//
+////        if (left.toString().equals("LET")) {
+////            return parseDeclarationStatement();
+////        }
+//
+//        if (match("=")) {
+//            Ast.Expr right = parseExpression();
+//            if (match(";")) {
+//                return new Ast.Stmt.Assignment(left, right);
+//            }
+//        } else if (match(";")) {
+//            return new Ast.Stmt.Expression(left);
+//        }
+//        throw new ParseException("Missing Semicolon", tokens.index);
     }
 
     /**
@@ -75,7 +183,23 @@ public final class Parser {
      * statement, aka {@code LET}.
      */
     public Ast.Stmt.Declaration parseDeclarationStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+
+        match ("LET");
+        if (!match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected Identifier", tokens.index);
+        }
+
+        String variable = tokens.get(-1).getLiteral();
+        Optional<Ast.Expr> value = Optional.empty();
+
+        if (match("=")) {
+            value = Optional.ofNullable(parseExpression());
+        }
+
+        if (!match(";")) {
+            throw new ParseException("Expected Semicolon", tokens.index);
+        }
+        return new Ast.Stmt.Declaration(variable, value);
     }
 
     /**
@@ -84,7 +208,28 @@ public final class Parser {
      * {@code IF}.
      */
     public Ast.Stmt.If parseIfStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Stmt> stmt1 = new ArrayList<>();
+        List<Ast.Stmt> stmt2 = new ArrayList<>();
+
+        match("IF");
+        Ast.Expr expr1 = parseExpression();
+        if (match("DO")) {
+            stmt1.add(parseStatement());
+        }
+        else {
+            throw new ParseException("Expected DO", tokens.index);
+        }
+
+        if (match("ELSE")) {
+            stmt2.add(parseStatement());
+        }
+
+        if (match("END")) {
+            return new Ast.Stmt.If(expr1, stmt1, stmt2);
+        }
+        else {
+            throw new ParseException("Expected END", tokens.index);
+        }
     }
 
     /**
@@ -93,7 +238,35 @@ public final class Parser {
      * {@code FOR}.
      */
     public Ast.Stmt.For parseForStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr expr1;
+        List<Ast.Stmt> stmt1 = new ArrayList<>();
+
+        match ("FOR");
+        if (!match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected Identifier", tokens.index);
+        }
+        String variable = tokens.get(-1).getLiteral();
+
+        if (match("IN")) {
+            expr1 = parseExpression();
+        }
+        else {
+            throw new ParseException("Expected IN", tokens.index);
+        }
+
+        if (match("DO")) {
+            stmt1.add(parseStatement());
+        }
+        else {
+            throw new ParseException("Expected DO", tokens.index);
+        }
+
+        if (match("END")) {
+            return new Ast.Stmt.For(variable, expr1, stmt1);
+        }
+        else {
+            throw new ParseException("Expected END", tokens.index);
+        }
     }
 
     /**
@@ -102,7 +275,24 @@ public final class Parser {
      * {@code WHILE}.
      */
     public Ast.Stmt.While parseWhileStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Stmt> stmt1 = new ArrayList<>();
+
+        match("WHILE");
+        Ast.Expr expr1 = parseExpression();
+        if (match("DO")) {
+            Ast.Stmt s1 = parseStatement();
+            stmt1.add(s1);
+        }
+        else {
+            throw new ParseException("Expected DO", tokens.index);
+        }
+
+        if (match("END")) {
+            return new Ast.Stmt.While(expr1, stmt1);
+        }
+        else {
+            throw new ParseException("Expected END", tokens.index); //FLAG
+        }
     }
 
     /**
@@ -111,7 +301,14 @@ public final class Parser {
      * {@code RETURN}.
      */
     public Ast.Stmt.Return parseReturnStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("RETURN");
+        Ast.Expr expr1 = parseExpression();
+        if (match(";")) {
+            return new Ast.Stmt.Return(expr1);
+        }
+        else {
+            throw new ParseException("Expected Semicolon", tokens.index);
+        }
     }
 
     /**
@@ -119,9 +316,6 @@ public final class Parser {
      */
     public Ast.Expr parseExpression() throws ParseException {
         Ast.Expr left = parseLogicalExpression();
-
-
-
         return left;
     }
 
