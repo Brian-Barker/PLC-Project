@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.swing.text.html.Option;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -214,7 +215,7 @@ final class ParserExpressionTests {
                 ),
                 Arguments.of("Missing Closing Parenthesis (ADDED) (SHOULD FAIL)",
                         Arrays.asList(
-                                //(expr1 + expr2)
+                                //(expr1
                                 new Token(Token.Type.OPERATOR, "(", 0),
                                 new Token(Token.Type.IDENTIFIER, "expr1", 1)
                         ),
@@ -222,7 +223,7 @@ final class ParserExpressionTests {
                 ),
                 Arguments.of("Missing Expression (ADDED) (SHOULD FAIL)",
                         Arrays.asList(
-                                //(expr1 + expr2)
+                                //()
                                 new Token(Token.Type.OPERATOR, "(", 0),
                                 new Token(Token.Type.IDENTIFIER, ")", 1)
                         ),
@@ -578,8 +579,14 @@ final class ParserExpressionTests {
                         new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj1")), "field1")), "field2")
                 ),
                 Arguments.of("Invalid Name (Should Fail)",
-                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "5", 0)),
-                        new Ast.Expr.Access(Optional.empty(), "5")
+                        Arrays.asList(
+                                //obj1.5
+                                new Token(Token.Type.IDENTIFIER, "obj1", 0),
+                                new Token(Token.Type.OPERATOR, ".", 4),
+                                new Token(Token.Type.IDENTIFIER, "5", 5)
+                        ),
+                        //Arrays.asList(new Token(Token.Type.IDENTIFIER, "5", 0)),
+                        new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj1")), "5")
                 )
         );
     }
