@@ -63,6 +63,9 @@ public final class Parser {
 
             if (match("=")) {
                 value = Optional.ofNullable(parseExpression());
+                if (!value.isPresent()) { //Make sure there is actually an expression
+                    throw new ParseException("Expected Expression", tokens.index);
+                }
             }
 
             if (!match(";")) {
@@ -78,8 +81,8 @@ public final class Parser {
      */
     public Ast.Method parseMethod() throws ParseException {
         String variable1;
-        List<String> str1 = new ArrayList<>();
-        List<Ast.Stmt> stmt1 = new ArrayList<>();
+        List<String> str = new ArrayList<>();
+        List<Ast.Stmt> stmt = new ArrayList<>();
 
         match("DEF");
 
@@ -89,39 +92,37 @@ public final class Parser {
 
         variable1 = tokens.get(-1).getLiteral();
 
-        if (match("(")) {
-            if (!match(")")) {
-                // FLAG
-                throw new ParseException("Expected closing parenthesis.", tokens.index);
-            }
-            if (!peek("DO")) {
-                if (match(Token.Type.IDENTIFIER) && !peek("DO")) {
-                    str1.add(tokens.get(-1).getLiteral());
+        if (!match("(")) {
+            throw new ParseException("Expected opening parenthesis.", tokens.index);
+        }
 
-                    if (match(",")) {
-                        if (match(Token.Type.IDENTIFIER)) {
-                            str1.add(tokens.get(-1).getLiteral());
-                        } else {
-                            throw new ParseException("Expected Identifier", tokens.index);
-                        }
-                    }
+        if (match(Token.Type.IDENTIFIER)) {
+            str.add(tokens.get(-1).getLiteral());
+            while (match(",")) {
+                if (!match(Token.Type.IDENTIFIER)) {
+                    throw new ParseException("Expected identifier.", tokens.index);
                 }
-            }
-            else if (match("DO")) {
-                Ast.Stmt s1 = parseStatement();
-                stmt1.add(s1);
-            }
-            else {
-                throw new ParseException("Expected DO", tokens.index);
+                str.add(tokens.get(-1).getLiteral());
             }
         }
 
+        if (!match(")")) {
+            throw new ParseException("Expected closing parenthesis.", tokens.index);
+        }
+
+        if (!match("DO")) {
+            throw new ParseException("Expected \"DO\".", tokens.index);
+        }
+
+        while(tokens.has(0) && !peek("END")) {
+            stmt.add(parseStatement());
+        }
 
         if (!match("END")) {
-            throw new ParseException("Expected END", tokens.index);
+            throw new ParseException("Expected \"END\".", tokens.index);
         }
 
-        return new Ast.Method(variable1, str1, stmt1);
+        return new Ast.Method(variable1, str, stmt);
     }
 
     /**
