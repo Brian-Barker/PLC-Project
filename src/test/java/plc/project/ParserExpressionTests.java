@@ -572,13 +572,13 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "expr4", 30)
                         ),
                         new Ast.Expr.Binary("AND",
-                                new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 (new Ast.Expr.Binary("AND",
-                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
-                                        (new Ast.Expr.Binary("AND",
-                                                new Ast.Expr.Access(Optional.empty(), "expr3"),
-                                                new Ast.Expr.Access(Optional.empty(), "expr4")
-                                        ))
+                                        new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr2")
+                                )),
+                                (new Ast.Expr.Binary("AND",
+                                        new Ast.Expr.Access(Optional.empty(), "expr3"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr4")
                                 ))
                         )
                 ),
@@ -633,11 +633,73 @@ final class ParserExpressionTests {
                                         new Ast.Expr.Access(Optional.empty(), "expr2"),
                                         new Ast.Expr.Access(Optional.empty(), "expr3")
                                 )))
-                                (new Ast.Expr.Group(
-                                    (new Ast.Expr.Binary("AND",
-                                            new Ast.Expr.Access(Optional.empty(), "expr2"),
-                                            new Ast.Expr.Access(Optional.empty(), "expr3")
-                                    ))
+                        )
+                ),
+                Arguments.of("Binary + Multiple Operands",
+                        Arrays.asList(
+                                //expr1 + expr2 + expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "+", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                                new Token(Token.Type.IDENTIFIER, "+", 14),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                        ),
+                        new Ast.Expr.Binary("+",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                (new Ast.Expr.Binary("+",
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr3")
+                                ))
+                        )
+                ),
+                Arguments.of("Binary / Multiple Operands",
+                        Arrays.asList(
+                                //expr1 / expr2 / expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "/", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                                new Token(Token.Type.IDENTIFIER, "/", 14),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                        ),
+                        new Ast.Expr.Binary("/",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                (new Ast.Expr.Binary("/",
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr3")
+                                ))
+                        )
+                ),
+                Arguments.of("Binary * / Multiple Operands",
+                        Arrays.asList(
+                                //expr1 * expr2 / expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "*", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                                new Token(Token.Type.IDENTIFIER, "/", 14),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                        ),
+                        new Ast.Expr.Binary("*",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                (new Ast.Expr.Binary("/",
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr3")
+                                ))
+                        )
+                ),
+                Arguments.of("Binary * + Multiple Operands",
+                        Arrays.asList(
+                                //expr1 * expr2 + expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "*", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                                new Token(Token.Type.IDENTIFIER, "+", 14),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                        ),
+                        new Ast.Expr.Binary("*",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                (new Ast.Expr.Binary("+",
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr3")
                                 ))
                         )
                 )
