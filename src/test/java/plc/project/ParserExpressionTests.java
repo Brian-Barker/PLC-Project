@@ -542,6 +542,80 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
+                ),
+                Arguments.of("Binary AND Multiple Operands",
+                        Arrays.asList(
+                                //expr1 AND expr2 AND expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "AND", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 10),
+                                new Token(Token.Type.IDENTIFIER, "AND", 16),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 20)
+                        ),
+                        new Ast.Expr.Binary("AND",
+                                (new Ast.Expr.Binary("AND",
+                                        new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr2")
+                                )),
+                                new Ast.Expr.Access(Optional.empty(), "expr3")
+                        )
+                ),
+                Arguments.of("Binary AND Multiple Operands 2",
+                        Arrays.asList(
+                                //expr1 AND expr2 AND expr3 AND expr4
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "AND", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 10),
+                                new Token(Token.Type.IDENTIFIER, "AND", 16),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 20),
+                                new Token(Token.Type.IDENTIFIER, "AND", 26),
+                                new Token(Token.Type.IDENTIFIER, "expr4", 30)
+                        ),
+                        new Ast.Expr.Binary("AND",
+                                (new Ast.Expr.Binary("AND",
+                                        new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr2")
+                                )),
+                                (new Ast.Expr.Binary("AND",
+                                        new Ast.Expr.Access(Optional.empty(), "expr3"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr4")
+                                ))
+                        )
+                ),
+                Arguments.of("Binary AND/OR Multiple Operands",
+                        Arrays.asList(
+                                //expr1 AND expr2 OR expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "AND", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 10),
+                                new Token(Token.Type.IDENTIFIER, "OR", 16),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 19)
+                        ),
+                        new Ast.Expr.Binary("OR",
+                                (new Ast.Expr.Binary("AND",
+                                        new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr2")
+                                )),
+                                new Ast.Expr.Access(Optional.empty(), "expr3")
+                        )
+                ),
+                Arguments.of("Binary OR Multiple Operands",
+                        Arrays.asList(
+                                //expr1 OR expr2 OR expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "OR", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                                new Token(Token.Type.IDENTIFIER, "OR", 15),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 18)
+                        ),
+                        new Ast.Expr.Binary("OR",
+                                (new Ast.Expr.Binary("OR",
+                                        new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr2")
+                                )),
+                                new Ast.Expr.Access(Optional.empty(), "expr3")
+                        )
+
                 )
         );
     }
