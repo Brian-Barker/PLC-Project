@@ -448,7 +448,7 @@ public final class Parser {
         else if (match(Token.Type.IDENTIFIER)) {
             String name = tokens.get(-1).getLiteral();
             if (name.matches("\\d+")) {
-                throw new ParseException("Invalid Name.", (tokens.index)-1);
+                throw new ParseException("Invalid Name.", tokens.index);
             }
 
             if (match("(")) {
@@ -498,8 +498,7 @@ public final class Parser {
         else if (match("(")) {
             Ast.Expr expr = parseExpression();
             if (!match(")")) {
-                //System.out.print((tokens.index)-1);
-                throw new ParseException("Expected closing parenthesis.", (tokens.index)-1);
+                throw new ParseException("Expected closing parenthesis.", tokens.index);
             }
             return new Ast.Expr.Group(expr);
         }
