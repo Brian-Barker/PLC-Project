@@ -84,6 +84,7 @@ public final class Parser {
         List<String> str = new ArrayList<>();
         List<Ast.Stmt> stmt = new ArrayList<>();
 
+        System.out.println("here");
         match("DEF");
 
         if (!match(Token.Type.IDENTIFIER)) {
@@ -113,7 +114,6 @@ public final class Parser {
         if (!match("DO")) {
             throw new ParseException("Expected \"DO\".", tokens.index);
         }
-
         while(tokens.has(0) && !peek("END")) {
             stmt.add(parseStatement());
         }
