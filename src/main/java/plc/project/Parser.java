@@ -27,7 +27,6 @@ public final class Parser {
     public Parser(List<Token> tokens) {
         this.tokens = new TokenStream(tokens);
     }
-
     /**
      * Parses the {@code source} rule.
      */
@@ -84,7 +83,6 @@ public final class Parser {
         List<String> str = new ArrayList<>();
         List<Ast.Stmt> stmt = new ArrayList<>();
 
-        System.out.println("here");
         match("DEF");
 
         if (!match(Token.Type.IDENTIFIER)) {
@@ -192,28 +190,27 @@ public final class Parser {
      * {@code IF}.
      */
     public Ast.Stmt.If parseIfStatement() throws ParseException {
-        List<Ast.Stmt> stmt1 = new ArrayList<>();
-        List<Ast.Stmt> stmt2 = new ArrayList<>();
+        List<Ast.Stmt> thenStmts = new ArrayList<>();
+        List<Ast.Stmt> elseStmts = new ArrayList<>();
 
         match("IF");
-        Ast.Expr expr1 = parseExpression();
-        if (match("DO")) {
-            stmt1.add(parseStatement());
-        }
-        else {
+        Ast.Expr condition = parseExpression();
+        if (!match("DO")) {
             throw new ParseException("Expected DO", tokens.index);
         }
-
-        if (match("ELSE")) {
-            stmt2.add(parseStatement());
+        while (tokens.has(0) && !peek("ELSE") && !peek("END")) {
+            thenStmts.add(parseStatement());
         }
 
-        if (match("END")) {
-            return new Ast.Stmt.If(expr1, stmt1, stmt2);
+        while (match("ELSE")) {
+            elseStmts.add(parseStatement());
         }
-        else {
+
+        if (!match("END")) {
             throw new ParseException("Expected END", tokens.index);
         }
+
+        return new Ast.Stmt.If(condition, thenStmts, elseStmts);
     }
 
     /**
@@ -222,35 +219,35 @@ public final class Parser {
      * {@code FOR}.
      */
     public Ast.Stmt.For parseForStatement() throws ParseException {
-        Ast.Expr expr1;
-        List<Ast.Stmt> stmt1 = new ArrayList<>();
+        Ast.Expr value;
+        List<Ast.Stmt> stmts = new ArrayList<>();
 
-        match ("FOR");
+        match("FOR");
+
         if (!match(Token.Type.IDENTIFIER)) {
             throw new ParseException("Expected Identifier", tokens.index);
         }
-        String variable = tokens.get(-1).getLiteral();
+        String name = tokens.get(-1).getLiteral();
 
-        if (match("IN")) {
-            expr1 = parseExpression();
-        }
-        else {
-            throw new ParseException("Expected IN", tokens.index);
+        if (!match("IN")) {
+            throw new ParseException("Expected \"IN\"", tokens.index);
         }
 
-        if (match("DO")) {
-            stmt1.add(parseStatement());
-        }
-        else {
-            throw new ParseException("Expected DO", tokens.index);
+        value = parseExpression();
+
+        if (!match("DO")) {
+            throw new ParseException("Expected \"DO\"", tokens.index);
         }
 
-        if (match("END")) {
-            return new Ast.Stmt.For(variable, expr1, stmt1);
+        while(tokens.has(0) && !peek("END")) {
+            stmts.add(parseStatement());
         }
-        else {
-            throw new ParseException("Expected END", tokens.index);
+
+        if (!match("END")) {
+            throw new ParseException("Expected \"END\"", tokens.index);
         }
+
+        return new Ast.Stmt.For(name, value, stmts);
     }
 
     /**
@@ -259,24 +256,25 @@ public final class Parser {
      * {@code WHILE}.
      */
     public Ast.Stmt.While parseWhileStatement() throws ParseException {
-        List<Ast.Stmt> stmt1 = new ArrayList<>();
+        Ast.Expr condition;
+        List<Ast.Stmt> stmts = new ArrayList<>();
 
         match("WHILE");
-        Ast.Expr expr1 = parseExpression();
-        if (match("DO")) {
-            Ast.Stmt s1 = parseStatement();
-            stmt1.add(s1);
-        }
-        else {
+        condition = parseExpression();
+
+        if (!match("DO")) {
             throw new ParseException("Expected DO", tokens.index);
         }
 
-        if (match("END")) {
-            return new Ast.Stmt.While(expr1, stmt1);
+        while(tokens.has(0) && !peek("END")) {
+            stmts.add(parseStatement());
         }
-        else {
-            throw new ParseException("Expected END", tokens.index); //FLAG
+
+        if (!match("END")) {
+            throw new ParseException("Expected END", tokens.index);
         }
+
+        return new Ast.Stmt.While(condition, stmts);
     }
 
     /**

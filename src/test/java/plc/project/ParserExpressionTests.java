@@ -846,25 +846,6 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ")", 13)
                         ),
                         null
-                ),
-                Arguments.of("Method Field (Should Fail)",
-                        Arrays.asList(
-                                //DEF name() DO stmt; END\nLET name = expr;
-                                new Token(Token.Type.IDENTIFIER, "DEF", 0),
-                                new Token(Token.Type.IDENTIFIER, "name", 3),
-                                new Token(Token.Type.OPERATOR, "(", 4),
-                                new Token(Token.Type.OPERATOR, ")", 5),
-                                new Token(Token.Type.IDENTIFIER, "DO", 6),
-                                new Token(Token.Type.IDENTIFIER, "stmt", 8),
-                                new Token(Token.Type.OPERATOR, ";", 12),
-                                new Token(Token.Type.IDENTIFIER, "END", 15),
-                                new Token(Token.Type.IDENTIFIER, "LET", 18),
-                                new Token(Token.Type.IDENTIFIER, "name", 22),
-                                new Token(Token.Type.OPERATOR, "=", 23),
-                                new Token(Token.Type.IDENTIFIER, "expr", 27),
-                                new Token(Token.Type.OPERATOR, ";", 28)
-                        ),
-                        new Ast.Expr.Function(Optional.of(new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "x")), "obj")), "method", Arrays.asList())
                 )
         );
     }
