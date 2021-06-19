@@ -307,21 +307,65 @@ public final class Parser {
      * Parses the {@code logical-expression} rule.
      */
     public Ast.Expr parseLogicalExpression() throws ParseException {
-        Ast.Expr left = parseEqualityExpression();
-        String logical;
+        Ast.Expr arg1 = null;
+        Ast.Expr arg2 = null;
+
+        Ast.Expr left = parseEqualityExpression();;
+        String logical1;
+        String logical2 = null;
 
         if (match("AND")) {
-            logical = tokens.get(-1).getLiteral();
+            logical1 = tokens.get(-1).getLiteral();
             Ast.Expr right = parseEqualityExpression();
 
-            return new Ast.Expr.Binary(logical, left, right);
+            arg1 = new Ast.Expr.Binary(logical1, left, right);
+
+            //While there are still tokens present
+            while (tokens.has(0)) {
+                if (match ("AND") | match( "OR")) {
+                    logical2 = tokens.get(-1).getLiteral();
+                    arg2 = parseEqualityExpression();
+
+
+                }
+                if (!tokens.has(0)) {
+                    break;
+                }
+
+                return new Ast.Expr.Binary(logical2, arg1, arg2);
+            }
+
+            // Check if tokens are all used. If so, return. Otherwise, keep going
+            if (!tokens.has(0)) {
+                return arg1;
+            }
+
+            if (match ("AND") | match( "OR")) {
+                logical2 = tokens.get(-1).getLiteral();
+                arg2 = parseEqualityExpression();
+
+                return new Ast.Expr.Binary(logical2, arg1, arg2);
+            }
         }
         else if (match("OR")) {
-            logical = tokens.get(-1).getLiteral();
+            logical1 = tokens.get(-1).getLiteral();
             Ast.Expr right = parseEqualityExpression();
 
-            return new Ast.Expr.Binary(logical, left, right);
+            arg1 = new Ast.Expr.Binary(logical1, left, right);
+
+            // Check if tokens are all used. If so, return. Otherwise, keep going
+            if (!tokens.has(0)) {
+                return arg1;
+            }
+
+            if (match ("AND") | match( "OR")) {
+                logical2 = tokens.get(-1).getLiteral();
+                arg2 = parseEqualityExpression();
+
+                return new Ast.Expr.Binary(logical2, arg1, arg2);
+            }
         }
+
         return left;
     }
 
