@@ -591,12 +591,12 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "OR", 16),
                                 new Token(Token.Type.IDENTIFIER, "expr3", 19)
                         ),
-                        new Ast.Expr.Binary("OR",
-                                (new Ast.Expr.Binary("AND",
-                                        new Ast.Expr.Access(Optional.empty(), "expr1"),
-                                        new Ast.Expr.Access(Optional.empty(), "expr2")
-                                )),
-                                new Ast.Expr.Access(Optional.empty(), "expr3")
+                        new Ast.Expr.Binary("AND",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                (new Ast.Expr.Binary("OR",
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr3")
+                                ))
                         )
                 ),
                 Arguments.of("Binary OR Multiple Operands",
@@ -609,11 +609,11 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "expr3", 18)
                         ),
                         new Ast.Expr.Binary("OR",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 (new Ast.Expr.Binary("OR",
-                                        new Ast.Expr.Access(Optional.empty(), "expr1"),
-                                        new Ast.Expr.Access(Optional.empty(), "expr2")
-                                )),
-                                new Ast.Expr.Access(Optional.empty(), "expr3")
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr3")
+                                ))
                         )
                 ),
                 Arguments.of("Binary AND / Equality",
