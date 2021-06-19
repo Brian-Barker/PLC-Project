@@ -35,11 +35,11 @@ public final class Parser {
         List<Ast.Field> field1 = new ArrayList<>();
         List<Ast.Method> method1 = new ArrayList<>();
 
-        if (peek("LET")) {
+        while (peek("LET")) {
             field1.add(parseField());
         }
 
-        if (peek("DEF")) {
+        while (peek("DEF")) {
             Ast.Method m1 = parseMethod();
             method1.add(m1);
         }
