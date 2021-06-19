@@ -553,11 +553,11 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "expr3", 20)
                         ),
                         new Ast.Expr.Binary("AND",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 (new Ast.Expr.Binary("AND",
-                                        new Ast.Expr.Access(Optional.empty(), "expr1"),
-                                        new Ast.Expr.Access(Optional.empty(), "expr2")
-                                )),
-                                new Ast.Expr.Access(Optional.empty(), "expr3")
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr3")
+                                ))
                         )
                 ),
                 Arguments.of("Binary AND Multiple Operands 2",
