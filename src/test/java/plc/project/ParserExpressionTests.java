@@ -572,13 +572,13 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "expr4", 30)
                         ),
                         new Ast.Expr.Binary("AND",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 (new Ast.Expr.Binary("AND",
-                                        new Ast.Expr.Access(Optional.empty(), "expr1"),
-                                        new Ast.Expr.Access(Optional.empty(), "expr2")
-                                )),
-                                (new Ast.Expr.Binary("AND",
-                                        new Ast.Expr.Access(Optional.empty(), "expr3"),
-                                        new Ast.Expr.Access(Optional.empty(), "expr4")
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        (new Ast.Expr.Binary("AND",
+                                                new Ast.Expr.Access(Optional.empty(), "expr3"),
+                                                new Ast.Expr.Access(Optional.empty(), "expr4")
+                                        ))
                                 ))
                         )
                 ),
@@ -621,17 +621,19 @@ final class ParserExpressionTests {
                                 //expr1 == (expr2 AND expr3)
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),
                                 new Token(Token.Type.OPERATOR, "==", 6),
-                                new Token(Token.Type.IDENTIFIER, "(", 9),
+                                new Token(Token.Type.OPERATOR, "(", 9),
                                 new Token(Token.Type.IDENTIFIER, "expr2", 10),
                                 new Token(Token.Type.IDENTIFIER, "AND", 16),
                                 new Token(Token.Type.IDENTIFIER, "expr3", 20),
-                                new Token(Token.Type.IDENTIFIER, ")", 25)
+                                new Token(Token.Type.OPERATOR, ")", 25)
                         ),
                         new Ast.Expr.Binary("==",
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
-                                (new Ast.Expr.Binary("AND",
-                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
-                                        new Ast.Expr.Access(Optional.empty(), "expr3")
+                                (new Ast.Expr.Group(
+                                    (new Ast.Expr.Binary("AND",
+                                            new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                            new Ast.Expr.Access(Optional.empty(), "expr3")
+                                    ))
                                 ))
                         )
                 )
