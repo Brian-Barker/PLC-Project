@@ -123,7 +123,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
 
         String literal = str.replaceAll("[^0-9]", ""); //Need to get first literal
-        System.out.print(literal);
         bigIntStr1 = new BigInteger(literal);
 
         return Environment.create(bigIntStr1);
