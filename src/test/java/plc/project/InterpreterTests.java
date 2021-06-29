@@ -318,6 +318,27 @@ final class InterpreterTests {
                                 new Ast.Expr.Literal(new BigDecimal("3.4"))
                         ),
                         new BigDecimal("0.4")
+                ),
+                Arguments.of("Less Than (ADDED)",
+                        new Ast.Expr.Binary("<",
+                                new Ast.Expr.Literal(BigInteger.TEN),
+                                new Ast.Expr.Literal(BigInteger.ONE)
+                        ),
+                        false
+                ),
+                Arguments.of("Greater Than or Equal (ADDED)",
+                        new Ast.Expr.Binary(">=",
+                                new Ast.Expr.Literal(BigInteger.TEN),
+                                new Ast.Expr.Literal(BigInteger.TEN)
+                        ),
+                        true
+                ),
+                Arguments.of("Not Equal (ADDED)",
+                        new Ast.Expr.Binary("!=",
+                                new Ast.Expr.Literal(BigInteger.ONE),
+                                new Ast.Expr.Literal(BigInteger.TEN)
+                        ),
+                        true
                 )
         );
     }

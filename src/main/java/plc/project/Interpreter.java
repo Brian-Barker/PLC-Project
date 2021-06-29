@@ -3,6 +3,7 @@ package plc.project;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -130,7 +131,107 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Binary ast) {
-        throw new UnsupportedOperationException(); //TODO
+        String str = ast.getOperator();
+
+        if (str.contains("AND")) {
+            if (ast.getLeft().toString().contains("true") && ast.getRight().toString().contains("false")) {
+                return Environment.create(false);
+            }
+            else if (ast.getLeft().toString().contains("false") && ast.getRight().toString().contains("true")) {
+                return Environment.create(false);
+            }
+            else if (ast.getLeft().toString().contains("true") && ast.getRight().toString().contains("true")) {
+                return Environment.create(true);
+            }
+            else if (ast.getLeft().toString().contains("false") && ast.getRight().toString().contains("false")) {
+                return Environment.create(false);
+            }
+            return Environment.NIL;
+        }
+        else if (str.contains("OR")) {
+            if (ast.getLeft().toString().contains("true") || ast.getRight().toString().contains("true")) {
+                return Environment.create(true);
+            }
+            else if (ast.getLeft().toString().contains("false") && ast.getRight().toString().contains("false")) {
+                return Environment.create(false);
+            }
+            return Environment.NIL;
+        }
+
+        String left = ast.getLeft().toString();
+        String right = ast.getRight().toString();
+
+        left = left.substring(left.lastIndexOf("=") + 1, left.lastIndexOf("}"));
+        right = right.substring(right.lastIndexOf("=") + 1, right.lastIndexOf("}"));
+
+        if (left.matches(".*\\d.*") || right.matches(".*\\d.*")) {
+            BigDecimal leftBigDec = new BigDecimal(left);
+            BigDecimal rightBigDec = new BigDecimal(right);
+
+            //Note: Watch out for funneling expressions properly while using contains
+            //Ex: <= will go into < as <= contains <, therefore, need to funnel <= before <
+
+            if (str.contains("<=")) {
+                if (leftBigDec.compareTo(rightBigDec) <= 0) {
+                    return Environment.create(true);
+                } else {
+                    return Environment.create(false);
+                }
+            } else if (str.contains("<")) {
+                if (leftBigDec.compareTo(rightBigDec) < 0) {
+                    return Environment.create(true);
+                } else {
+                    return Environment.create(false);
+                }
+            } else if (str.contains(">=")) {
+                if (leftBigDec.compareTo(rightBigDec) >= 0) {
+                    return Environment.create(true);
+                } else {
+                    return Environment.create(false);
+                }
+            } else if (str.contains(">")) {
+                if (leftBigDec.compareTo(rightBigDec) > 0) {
+                    return Environment.create(true);
+                } else {
+                    return Environment.create(false);
+                }
+            } else if (str.contains("==")) {
+                if (leftBigDec.compareTo(rightBigDec) == 0) {
+                    return Environment.create(true);
+                } else {
+                    return Environment.create(false);
+                }
+            } else if (str.contains("!=")) {                        ///DOUBLE CHECK LOGIC
+                if (leftBigDec.compareTo(rightBigDec) != 0) {
+                    return Environment.create(true);
+                } else {
+                    return Environment.create(false);
+                }
+            }
+
+            if (str.contains("+")) {
+                if ((Math.round(leftBigDec.doubleValue()) == leftBigDec.doubleValue()) &&
+                        Math.round(rightBigDec.doubleValue()) == rightBigDec.doubleValue()) {
+                    BigInteger leftBigInt = leftBigDec.toBigInteger();
+                    BigInteger rightBigInt = rightBigDec.toBigInteger();
+                    return Environment.create(leftBigInt.add(rightBigInt));
+                }
+                return Environment.create(leftBigDec.add(rightBigDec));
+            } else if (str.contains("-")) {
+                return Environment.create(leftBigDec.subtract(rightBigDec));
+            } else if (str.contains("*")) {
+                return Environment.create(leftBigDec.multiply(rightBigDec));
+            } else if (str.contains("/")) {
+                return Environment.create(leftBigDec.divide(rightBigDec, BigDecimal.ROUND_HALF_UP));
+            }
+        }
+
+        //Concatenation
+        if (str.contains("+")) {
+            return Environment.create(left + right);
+        }
+
+        return Environment.NIL;
     }
 
     @Override
