@@ -238,13 +238,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Access ast) {
-        if (ast.getReceiver().isPresent()) {
-            //Evaluate it
-            scope.defineVariable(ast.getName(), );
-            //Return value of appropriate field
-            return variable.getValue();
+        String fullVariable = ast.getName();
+
+        while(ast.getReceiver().isPresent()) {
+            ast = (Ast.Expr.Access) ast.getReceiver().get();
+            fullVariable = ast.getName() + '.' + fullVariable;
         }
-        return Environment.create(ast.getName());
+
+        return Environment.create(fullVariable);
     }
 
     @Override
