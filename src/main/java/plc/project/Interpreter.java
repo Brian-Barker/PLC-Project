@@ -64,12 +64,21 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.If ast) {
-        throw new UnsupportedOperationException(); //TODO
+        Boolean condition = requireType( Boolean.class, visit( ast.getCondition() ) );
+
+        if (condition) ast.getThenStatements().forEach(this::visit);
+        else ast.getElseStatements().forEach(this::visit);
+
+        return Environment.NIL;
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.For ast) {
-        throw new UnsupportedOperationException(); //TODO
+        System.out.println(ast.getValue().toString());
+
+        requireType( Iterable.class, visit( ast.getValue() ) ); //TODO
+
+        return Environment.NIL;
     }
 
     @Override
