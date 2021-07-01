@@ -31,7 +31,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Field ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if ( ast.getValue().isPresent() ) {
+            scope.defineVariable( ast.getName(), visit( ast.getValue().get() ) );
+        } else {
+            scope.defineVariable( ast.getName(), Environment.NIL );
+        }
+        return Environment.NIL;
     }
 
     @Override
@@ -41,8 +46,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Expression ast) {
+        String exprStmt = ast.getExpression().toString();
 
+        exprStmt = ast.getExpression().toString().substring(exprStmt.indexOf("arguments=[Ast.Expr.Literal{literal=") + 36);
+        exprStmt = exprStmt.split("}")[0];
 
+        System.out.println(exprStmt);
         return Environment.NIL;
     }
 
@@ -53,13 +62,19 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         } else {
             scope.defineVariable( ast.getName(), Environment.NIL );
         }
-
         return Environment.NIL;
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Assignment ast) {
-        throw new UnsupportedOperationException(); //TODO
+
+        System.out.print(ast.getValue());
+
+        String literal = ast.getValue().toString();
+        literal = ast.getValue().toString().substring(literal.indexOf("Ast.Expr.Literal{literal=") + 25);
+        literal = literal.split("}")[0];
+
+        return Environment.create(literal);
     }
 
     @Override
@@ -250,7 +265,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        String fullFunction = ast.getName();
+
+        if (ast.getArguments().isEmpty()) {
+            if (ast.getReceiver().isPresent()){
+                fullFunction = "object." + fullFunction;
+            }
+            return Environment.create(fullFunction);
+        }
+        return Environment.NIL;
     }
 
     /**
