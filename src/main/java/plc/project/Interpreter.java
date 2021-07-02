@@ -46,12 +46,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Expression ast) {
-        String exprStmt = ast.getExpression().toString();
 
-        exprStmt = ast.getExpression().toString().substring(exprStmt.indexOf("arguments=[Ast.Expr.Literal{literal=") + 36);
-        exprStmt = exprStmt.split("}")[0];
-
-        System.out.println(exprStmt);
+        visit ( ast.getExpression() );
         return Environment.NIL;
     }
 
@@ -130,7 +126,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Group ast) {
-        return visit(ast.getExpression());
+        return visit( ast.getExpression() );
     }
 
     @Override
@@ -242,9 +238,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     public Environment.PlcObject visit(Ast.Expr.Access ast) {
         String fullVariable = ast.getName();
 
-        while(ast.getReceiver().isPresent()) {
+        /*while(ast.getReceiver().isPresent()) {
             ast = (Ast.Expr.Access) ast.getReceiver().get();
             fullVariable = ast.getName() + '.' + fullVariable;
+        }
+        Environment.PlcObject test = Environment.create(fullVariable);*/
+        if (ast.getReceiver().isPresent()) {
+            ast.getReceiver().
         }
 
         return Environment.create(fullVariable);
