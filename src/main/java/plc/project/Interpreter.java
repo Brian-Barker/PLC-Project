@@ -79,7 +79,17 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.If ast) {
-        throw new UnsupportedOperationException(); //TODO
+
+        Boolean ifCondition = requireType( Boolean.class, visit(ast.getCondition()) );
+
+        scope = new Scope(scope);
+        if (ifCondition) {
+            ast.getThenStatements().forEach(this::visit);
+        }
+        else {
+            ast.getElseStatements().forEach(this::visit);
+        }
+        return Environment.NIL;
     }
 
     @Override
@@ -119,31 +129,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Group ast) {
-        String str = ast.getExpression().toString();
-        BigInteger bigIntStr1,bigIntStr2 = null;
-
-        if (str.contains("operator")) {
-
-            String leftLiteral = str;
-            leftLiteral = ast.getExpression().toString().substring(leftLiteral.indexOf("left=Ast.Expr.Literal{literal=") + 30);
-            leftLiteral = leftLiteral.split("}")[0];
-
-            String rightLiteral = str;
-            rightLiteral = ast.getExpression().toString().substring(rightLiteral.indexOf("right=Ast.Expr.Literal{literal=") + 31);
-            rightLiteral = rightLiteral.split("}")[0];
-
-            bigIntStr1 = new BigInteger(leftLiteral);
-            bigIntStr2 = new BigInteger(rightLiteral);
-
-            BigInteger res = bigIntStr1.add(bigIntStr2);
-
-            return Environment.create(res);
-        }
-
-        String literal = str.replaceAll("[^0-9]", ""); //Need to get first literal
-        bigIntStr1 = new BigInteger(literal);
-
-        return Environment.create(bigIntStr1);
+        return visit(ast.getExpression());
     }
 
     @Override
