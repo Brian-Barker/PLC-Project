@@ -238,16 +238,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     public Environment.PlcObject visit(Ast.Expr.Access ast) {
         String fullVariable = ast.getName();
 
-        /*while(ast.getReceiver().isPresent()) {
-            ast = (Ast.Expr.Access) ast.getReceiver().get();
-            fullVariable = ast.getName() + '.' + fullVariable;
-        }
-        Environment.PlcObject test = Environment.create(fullVariable);*/
         if (ast.getReceiver().isPresent()) {
-            ast.getReceiver().
+            Environment.Variable object = scope.lookupVariable(((Ast.Expr.Access)ast.getReceiver().get()).getName());
+            System.out.println( object.getValue().getField(ast.getName()).getClass() );
         }
 
-        return Environment.create(fullVariable);
+        Environment.Variable variable = scope.lookupVariable(fullVariable);
+        return variable.getValue();
     }
 
     @Override
