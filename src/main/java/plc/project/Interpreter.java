@@ -240,7 +240,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         if (ast.getReceiver().isPresent()) {
             Environment.Variable object = scope.lookupVariable(((Ast.Expr.Access)ast.getReceiver().get()).getName());
-            System.out.println( object.getValue().getField(ast.getName()).getClass() );
+            return object.getValue().getField(ast.getName()).getValue();
         }
 
         Environment.Variable variable = scope.lookupVariable(fullVariable);
