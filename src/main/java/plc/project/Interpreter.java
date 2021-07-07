@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -236,28 +237,32 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Access ast) {
-        String fullVariable = ast.getName();
-
         if (ast.getReceiver().isPresent()) {
-            Environment.Variable object = scope.lookupVariable(((Ast.Expr.Access)ast.getReceiver().get()).getName());
+            Environment.Variable object = scope.lookupVariable( ((Ast.Expr.Access)ast.getReceiver().get()).getName() );
             return object.getValue().getField(ast.getName()).getValue();
         }
 
-        Environment.Variable variable = scope.lookupVariable(fullVariable);
+        Environment.Variable variable = scope.lookupVariable(ast.getName());
         return variable.getValue();
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Function ast) {
-        String fullFunction = ast.getName();
-
-        if (ast.getArguments().isEmpty()) {
-            if (ast.getReceiver().isPresent()){
-                fullFunction = "object." + fullFunction;
-            }
-            return Environment.create(fullFunction);
+        List<Environment.PlcObject> argObjects = new ArrayList<Environment.PlcObject>();
+        List<Ast.Expr> args = ast.getArguments();
+        for (int i = 0; i < args.size(); ++i) {
+            argObjects.add(visit(args.get(i)));
         }
-        return Environment.NIL;
+
+        System.out.println(argObjects);
+
+        if ( ast.getReceiver().isPresent() ) {
+            Environment.Variable object = scope.lookupVariable( ((Ast.Expr.Access)ast.getReceiver().get()).getName() );
+            return object.getValue().callMethod( ast.getName(), argObjects );
+        }
+
+        Environment.Function function = scope.lookupFunction( ast.getName(), ast.getArguments().size() );
+        return function.invoke( argObjects );
     }
 
     /**
