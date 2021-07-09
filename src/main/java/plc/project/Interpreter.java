@@ -4,10 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
@@ -95,6 +92,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         if (((Ast.Expr.Access) ast.getReceiver()).getReceiver().isPresent()) {
             System.out.println(visit(ast.getReceiver()));
             System.out.println(scope);
+            visit(ast.getReceiver()).setField("object.field", visit(ast.getReceiver()));
             visit(ast.getReceiver()).setField("object.field", visit(ast.getValue()));
         } else {
             scope.lookupVariable(((Ast.Expr.Access) ast.getReceiver()).getName()).setValue(visit(ast.getValue()));
@@ -118,13 +116,18 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         Iterable value = requireType( Iterable.class, visit( ast.getValue() ) );
 
+        value.iterator().next();
+
+        scope.defineVariable( ast.getName(), Environment.create(value) );
+
+
         //Environment.create(value.forEach(this::visit));
 
         //scope.defineVariable( ast.getName(), visit( ast.getValue() ) );
 
 //        System.out.print(value);
 
-        scope.defineVariable( ast.getName(), Environment.create(value) );
+        //scope.defineVariable( ast.getName(), Environment.create(value) );
 
         return Environment.NIL;
     }
@@ -182,7 +185,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
 
         if (ast.getOperator().equals("<")) {
-            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) < -1 ) {
+            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) <= -1 ) {
                 return Environment.create(true);
             } else {
                 return Environment.create(false);
