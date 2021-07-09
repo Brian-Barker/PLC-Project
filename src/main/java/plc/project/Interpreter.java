@@ -224,9 +224,54 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             }
         }
 
-        Environment.PlcObject left = visit(ast.getLeft()), right = visit(ast.getRight());
         if (ast.getOperator().equals("+")) {
-            System.out.println(left.getClass());
+            Environment.PlcObject left = visit(ast.getLeft()), right = visit(ast.getRight());
+            //Concatenate
+            if (left.getValue().getClass() == String.class) {
+                return Environment.create(requireType(String.class, left) + right.getValue());
+            } else if (right.getValue().getClass() == String.class) {
+                return Environment.create(left.getValue() + requireType(String.class, right));
+            }
+
+            //Add
+            if (left.getValue().getClass() == BigInteger.class || right.getValue().getClass() == BigInteger.class) {
+                return Environment.create(requireType(BigInteger.class, left).add(requireType(BigInteger.class, right)));
+            } else if (left.getValue().getClass() == BigDecimal.class || right.getValue().getClass() == BigDecimal.class) {
+                return Environment.create(requireType(BigDecimal.class, left).add(requireType(BigDecimal.class, right)));
+            }
+
+            throw new RuntimeException("Expected String, BigInteger, or BigDecimal. Got " + left.getValue().getClass() + " and " + right.getValue().getClass());
+        }
+
+        if (ast.getOperator().equals("-")) {
+            Environment.PlcObject left = visit(ast.getLeft()), right = visit(ast.getRight());
+            if (left.getValue().getClass() == BigInteger.class || right.getValue().getClass() == BigInteger.class) {
+                return Environment.create(requireType(BigInteger.class, left).subtract(requireType(BigInteger.class, right)));
+            } else if (left.getValue().getClass() == BigDecimal.class || right.getValue().getClass() == BigDecimal.class) {
+                return Environment.create(requireType(BigDecimal.class, left).subtract(requireType(BigDecimal.class, right)));
+            }
+
+            throw new RuntimeException("Expected BigInteger or BigDecimal. Got " + left.getValue().getClass() + " and " + right.getValue().getClass());
+        }
+
+        if (ast.getOperator().equals("*")) {
+            Environment.PlcObject left = visit(ast.getLeft()), right = visit(ast.getRight());
+            if (left.getValue().getClass() == BigInteger.class || right.getValue().getClass() == BigInteger.class) {
+                return Environment.create(requireType(BigInteger.class, left).multiply(requireType(BigInteger.class, right)));
+            } else if (left.getValue().getClass() == BigDecimal.class || right.getValue().getClass() == BigDecimal.class) {
+                return Environment.create(requireType(BigDecimal.class, left).multiply(requireType(BigDecimal.class, right)));
+            }
+
+            throw new RuntimeException("Expected BigInteger or BigDecimal. Got " + left.getValue().getClass() + " and " + right.getValue().getClass());
+        }
+
+        if (ast.getOperator().equals("/")) {
+            Environment.PlcObject left = visit(ast.getLeft()), right = visit(ast.getRight());
+            if (left.getValue().getClass() == BigInteger.class) {
+                return Environment.create(requireType(BigInteger.class, left).divide(requireType(BigInteger.class, right)));
+            } else if (left.getValue().getClass() == BigDecimal.class) {
+                return Environment.create(requireType(BigDecimal.class, left).divide(requireType(BigDecimal.class, right), BigDecimal.ROUND_HALF_UP));
+            }
         }
 
         return Environment.NIL;
