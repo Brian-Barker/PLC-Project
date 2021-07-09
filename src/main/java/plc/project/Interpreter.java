@@ -125,9 +125,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 scope = new Scope(scope);
 
                 ast.getStatements().forEach(this::visit);
-                /*for ( Ast.Stmt stmt : ast.getStatements() ) { //This does the same as the above statement
-                    visit( stmt );
-                }*/
             } finally {
                 scope = scope.getParent();
             }
