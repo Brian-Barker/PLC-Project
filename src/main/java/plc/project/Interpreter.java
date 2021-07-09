@@ -112,18 +112,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Stmt.For ast) {
 
-
         Iterable value = requireType( Iterable.class, visit( ast.getValue() ) );
 
-//        value.forEach(this::visit);
+        //Environment.create(value.forEach(this::visit));
 
-//        for (value) {
-//
-//        }
+        //scope.defineVariable( ast.getName(), visit( ast.getValue() ) );
 
-//        scope.defineVariable( ast.getName(), value );
+//        System.out.print(value);
 
-        ast.getStatements().forEach(this::visit);
+        scope.defineVariable( ast.getName(), Environment.create(value) );
 
         return Environment.NIL;
     }
@@ -185,18 +182,20 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
 
         if (ast.getOperator().equals("<")) {
-            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) <= -1 ) {
+            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) < -1 ) {
                 return Environment.create(true);
             } else {
                 return Environment.create(false);
             }
-        } else if (ast.getOperator().equals("<=")) {
+        }
+        if (ast.getOperator().equals("<=")) {
             if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) <= 0 ) {
                 return Environment.create(true);
             } else {
                 return Environment.create(false);
             }
-        } else if (ast.getOperator().equals(">")) {
+        }
+        else if (ast.getOperator().equals(">")) {
             if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) >= 1 ) {
                 return Environment.create(true);
             } else {
