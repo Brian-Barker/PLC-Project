@@ -7,16 +7,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     private Scope scope = new Scope(null);
+    //private Optional<Ast.Expr> ;
 
     public Interpreter(Scope parent) {
         scope = new Scope(parent);
         scope.defineFunction("print", 1, args -> {
-            System.out.println(args.get(0).getValue());
             return Environment.NIL;
         });
     }
@@ -87,21 +88,24 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Assignment ast) {
+        if (ast.getReceiver().getClass() != Ast.Expr.Access.class) {
+            throw new RuntimeException("Non-assignable type. Expected Ast.Expr.Access, Got " + ast.getReceiver().getClass());
+        }
 
-        System.out.print(ast.getValue());
+        if (((Ast.Expr.Access) ast.getReceiver()).getReceiver().isPresent()) {
+            System.out.println(visit(ast.getReceiver()));
+            System.out.println(scope);
+            visit(ast.getReceiver()).setField("object.field", visit(ast.getValue()));
+        } else {
+            scope.lookupVariable(((Ast.Expr.Access) ast.getReceiver()).getName()).setValue(visit(ast.getValue()));
+        }
 
-        String literal = ast.getValue().toString();
-        literal = ast.getValue().toString().substring(literal.indexOf("Ast.Expr.Literal{literal=") + 25);
-        literal = literal.split("}")[0];
-
-        return Environment.create(literal);
+        return Environment.NIL;
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.If ast) {
         Boolean condition = requireType( Boolean.class, visit( ast.getCondition() ) );
-
-        System.out.println(ast.toString());
 
         if (condition) ast.getThenStatements().forEach(this::visit);
         else ast.getElseStatements().forEach(this::visit);
@@ -130,6 +134,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.While ast) {
+        System.out.println(ast.getStatements());
         while ( requireType( Boolean.class, visit( ast.getCondition() ) ) ) {
             try {
                 scope = new Scope(scope);
@@ -162,8 +167,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Binary ast) {
-        System.out.println(ast);
-
         if (ast.getOperator().equals("AND")) {
             if (requireType(Boolean.class, visit(ast.getLeft())).equals(false) || requireType(Boolean.class, visit(ast.getRight())).equals(false)) {
                 return Environment.create(false);
@@ -222,6 +225,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
 
         if (ast.getOperator().equals("+")) {
+            System.out.println("Left: " + visit(ast.getLeft()).getValue() + " Right: " + visit(ast.getRight()).getValue());
             Environment.PlcObject left = visit(ast.getLeft()), right = visit(ast.getRight());
             //Concatenate
             if (left.getValue().getClass() == String.class) {
@@ -277,12 +281,9 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Expr.Access ast) {
         if (ast.getReceiver().isPresent()) {
-            Environment.Variable object = scope.lookupVariable( ((Ast.Expr.Access)ast.getReceiver().get()).getName() );
-            return object.getValue().getField(ast.getName()).getValue();
+            return visit(ast.getReceiver().get()).getField(ast.getName()).getValue();
         }
-
-        Environment.Variable variable = scope.lookupVariable(ast.getName());
-        return variable.getValue();
+        return scope.lookupVariable(ast.getName()).getValue();
     }
 
     @Override
