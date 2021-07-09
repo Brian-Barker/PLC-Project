@@ -111,9 +111,19 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.For ast) {
-        System.out.println(ast.getValue().toString());
 
-        requireType( Iterable.class, visit( ast.getValue() ) ); //TODO
+
+        Iterable value = requireType( Iterable.class, visit( ast.getValue() ) );
+
+//        value.forEach(this::visit);
+
+//        for (value) {
+//
+//        }
+
+//        scope.defineVariable( ast.getName(), value );
+
+        ast.getStatements().forEach(this::visit);
 
         return Environment.NIL;
     }
