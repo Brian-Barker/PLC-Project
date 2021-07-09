@@ -27,7 +27,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
+        ast.getFields().forEach(this::visit);
+        ast.getMethods().forEach(this::visit);
+
+        return scope.lookupFunction( "main", 0 ).invoke(Collections.emptyList());
     }
 
     @Override
@@ -42,7 +45,27 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
-        throw new UnsupportedOperationException(); //TODO
+        java.util.function.Function<List<Environment.PlcObject>, Environment.PlcObject> function = arguments -> {
+            scope = new Scope(scope);
+
+            for (int i = 0; i < arguments.size(); ++i) {
+                scope.defineVariable(ast.getParameters().get(i), arguments.get(i));
+            }
+
+            try {
+                ast.getStatements().forEach(this::visit);
+            } catch (Return returnValue) {
+                scope = scope.getParent();
+                return returnValue.value;
+            }
+
+            scope = scope.getParent();
+            return Environment.NIL;
+        };
+
+        scope.defineFunction(ast.getName(), ast.getParameters().size(), function);
+
+        return Environment.NIL;
     }
 
     @Override
@@ -114,7 +137,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Return ast) {
-        throw new Return( Environment.create( ast.getValue() ) );
+        throw new Return( visit(ast.getValue()) );
     }
 
     @Override
@@ -132,104 +155,68 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Binary ast) {
-        String str = ast.getOperator();
+        System.out.println(ast);
 
-        if (str.contains("AND")) {
-            if (ast.getLeft().toString().contains("true") && ast.getRight().toString().contains("false")) {
+        if (ast.getOperator().equals("AND")) {
+            if (requireType(Boolean.class, visit(ast.getLeft())).equals(false) || requireType(Boolean.class, visit(ast.getRight())).equals(false)) {
                 return Environment.create(false);
             }
-            else if (ast.getLeft().toString().contains("false") && ast.getRight().toString().contains("true")) {
-                return Environment.create(false);
-            }
-            else if (ast.getLeft().toString().contains("true") && ast.getRight().toString().contains("true")) {
+            else {
                 return Environment.create(true);
             }
-            else if (ast.getLeft().toString().contains("false") && ast.getRight().toString().contains("false")) {
-                return Environment.create(false);
-            }
-            return Environment.NIL;
         }
-        else if (str.contains("OR")) {
-            if (ast.getLeft().toString().contains("true") || ast.getRight().toString().contains("true")) {
+        else if (ast.getOperator().equals("OR")) {
+            if (requireType(Boolean.class, visit(ast.getLeft())).equals(true) || requireType(Boolean.class, visit(ast.getRight())).equals(true)) {
                 return Environment.create(true);
             }
-            else if (ast.getLeft().toString().contains("false") && ast.getRight().toString().contains("false")) {
+            else {
                 return Environment.create(false);
             }
-            return Environment.NIL;
         }
 
-        String left = ast.getLeft().toString();
-        String right = ast.getRight().toString();
-
-        left = left.substring(left.lastIndexOf("=") + 1, left.lastIndexOf("}"));
-        right = right.substring(right.lastIndexOf("=") + 1, right.lastIndexOf("}"));
-
-        if (left.matches(".*\\d.*") || right.matches(".*\\d.*")) {
-            BigDecimal leftBigDec = new BigDecimal(left);
-            BigDecimal rightBigDec = new BigDecimal(right);
-
-            //Note: Watch out for funneling expressions properly while using contains
-            //Ex: <= will go into < as <= contains <, therefore, need to funnel <= before <
-
-            if (str.contains("<=")) {
-                if (leftBigDec.compareTo(rightBigDec) <= 0) {
-                    return Environment.create(true);
-                } else {
-                    return Environment.create(false);
-                }
-            } else if (str.contains("<")) {
-                if (leftBigDec.compareTo(rightBigDec) < 0) {
-                    return Environment.create(true);
-                } else {
-                    return Environment.create(false);
-                }
-            } else if (str.contains(">=")) {
-                if (leftBigDec.compareTo(rightBigDec) >= 0) {
-                    return Environment.create(true);
-                } else {
-                    return Environment.create(false);
-                }
-            } else if (str.contains(">")) {
-                if (leftBigDec.compareTo(rightBigDec) > 0) {
-                    return Environment.create(true);
-                } else {
-                    return Environment.create(false);
-                }
-            } else if (str.contains("==")) {
-                if (leftBigDec.compareTo(rightBigDec) == 0) {
-                    return Environment.create(true);
-                } else {
-                    return Environment.create(false);
-                }
-            } else if (str.contains("!=")) {                        ///DOUBLE CHECK LOGIC
-                if (leftBigDec.compareTo(rightBigDec) != 0) {
-                    return Environment.create(true);
-                } else {
-                    return Environment.create(false);
-                }
+        if (ast.getOperator().equals("<")) {
+            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) <= -1 ) {
+                return Environment.create(true);
+            } else {
+                return Environment.create(false);
             }
-
-            if (str.contains("+")) {
-                if ((Math.round(leftBigDec.doubleValue()) == leftBigDec.doubleValue()) &&
-                        Math.round(rightBigDec.doubleValue()) == rightBigDec.doubleValue()) {
-                    BigInteger leftBigInt = leftBigDec.toBigInteger();
-                    BigInteger rightBigInt = rightBigDec.toBigInteger();
-                    return Environment.create(leftBigInt.add(rightBigInt));
-                }
-                return Environment.create(leftBigDec.add(rightBigDec));
-            } else if (str.contains("-")) {
-                return Environment.create(leftBigDec.subtract(rightBigDec));
-            } else if (str.contains("*")) {
-                return Environment.create(leftBigDec.multiply(rightBigDec));
-            } else if (str.contains("/")) {
-                return Environment.create(leftBigDec.divide(rightBigDec, BigDecimal.ROUND_HALF_UP));
+        } else if (ast.getOperator().equals("<=")) {
+            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) <= 0 ) {
+                return Environment.create(true);
+            } else {
+                return Environment.create(false);
+            }
+        } else if (ast.getOperator().equals(">")) {
+            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) >= 1 ) {
+                return Environment.create(true);
+            } else {
+                return Environment.create(false);
+            }
+        } else if (ast.getOperator().equals(">=")) {
+            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) >= 0 ) {
+                return Environment.create(true);
+            } else {
+                return Environment.create(false);
             }
         }
 
-        //Concatenation
-        if (str.contains("+")) {
-            return Environment.create(left + right);
+        if (ast.getOperator().equals("==")) {
+            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) == 0 ) {
+                return Environment.create(true);
+            } else {
+                return Environment.create(false);
+            }
+        } else if (ast.getOperator().equals("!=")) {
+            if ( requireType(Comparable.class, visit(ast.getLeft())).compareTo(requireType(Comparable.class, visit(ast.getRight()))) != 0 ) {
+                return Environment.create(true);
+            } else {
+                return Environment.create(false);
+            }
+        }
+
+        Environment.PlcObject left = visit(ast.getLeft()), right = visit(ast.getRight());
+        if (ast.getOperator().equals("+")) {
+            System.out.println(left.getClass());
         }
 
         return Environment.NIL;
@@ -253,8 +240,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         for (int i = 0; i < args.size(); ++i) {
             argObjects.add(visit(args.get(i)));
         }
-
-        System.out.println(argObjects);
 
         if ( ast.getReceiver().isPresent() ) {
             Environment.Variable object = scope.lookupVariable( ((Ast.Expr.Access)ast.getReceiver().get()).getName() );
