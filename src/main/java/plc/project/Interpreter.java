@@ -111,44 +111,20 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Stmt.For ast) {
 
-        Iterable value = requireType( Iterable.class, visit( ast.getValue() ) );
+        for (Object element : requireType(Iterable.class, visit(ast.getValue())) ) {
+            scope = new Scope(scope);
 
-        scope = new Scope(scope);
+            scope.defineVariable( ast.getName(), (Environment.PlcObject) element );
+            ast.getStatements().forEach(this::visit);
 
-        String values = value.toString();
-        List<String> whole = Arrays.asList(values.split("\\s*,\\s*"));
-        List<String> val = new ArrayList<String>();
-        List<Integer> valInt = new ArrayList<Integer>();
-
-        for (int x = 0; x < whole.size(); x++) {
-            if(whole.get(x).contains("value=")) {
-                String temp = whole.get(x);
-                temp = temp.replace("value=", "");
-                if (temp.contains("}]")) {
-                    temp = temp.replace("}]", "");
-                }
-                temp = temp.replace("}", "");
-                val.add(temp);
-            }
+            scope = scope.getParent();
         }
-
-        for(String s : val) valInt.add(Integer.valueOf(s));
-
-        int sum = 0;
-        for (int x = 0; x < valInt.size(); x++) {
-            sum += valInt.get(x);
-//            System.out.println(valInt.get(x));
-        }
-
-        System.out.println(sum);
-        scope.defineVariable( ast.getName(), Environment.create(sum) );
 
         return Environment.NIL;
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.While ast) {
-        System.out.println(ast.getStatements());
         while ( requireType( Boolean.class, visit( ast.getCondition() ) ) ) {
             try {
                 scope = new Scope(scope);
@@ -241,7 +217,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
 
         if (ast.getOperator().equals("+")) {
-            System.out.println("Left: " + visit(ast.getLeft()).getValue() + " Right: " + visit(ast.getRight()).getValue());
             Environment.PlcObject left = visit(ast.getLeft()), right = visit(ast.getRight());
             //Concatenate
             if (left.getValue().getClass() == String.class) {
