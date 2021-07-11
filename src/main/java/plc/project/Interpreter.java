@@ -113,18 +113,35 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         Iterable value = requireType( Iterable.class, visit( ast.getValue() ) );
 
-        value.iterator().next();
+        scope = new Scope(scope);
 
-        scope.defineVariable( ast.getName(), Environment.create(value) );
+        String values = value.toString();
+        List<String> whole = Arrays.asList(values.split("\\s*,\\s*"));
+        List<String> val = new ArrayList<String>();
+        List<Integer> valInt = new ArrayList<Integer>();
 
+        for (int x = 0; x < whole.size(); x++) {
+            if(whole.get(x).contains("value=")) {
+                String temp = whole.get(x);
+                temp = temp.replace("value=", "");
+                if (temp.contains("}]")) {
+                    temp = temp.replace("}]", "");
+                }
+                temp = temp.replace("}", "");
+                val.add(temp);
+            }
+        }
 
-        //Environment.create(value.forEach(this::visit));
+        for(String s : val) valInt.add(Integer.valueOf(s));
 
-        //scope.defineVariable( ast.getName(), visit( ast.getValue() ) );
+        int sum = 0;
+        for (int x = 0; x < valInt.size(); x++) {
+            sum += valInt.get(x);
+//            System.out.println(valInt.get(x));
+        }
 
-//        System.out.print(value);
-
-        //scope.defineVariable( ast.getName(), Environment.create(value) );
+        System.out.println(sum);
+        scope.defineVariable( ast.getName(), Environment.create(sum) );
 
         return Environment.NIL;
     }
