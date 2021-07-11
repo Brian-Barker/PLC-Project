@@ -90,7 +90,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
 
         if (((Ast.Expr.Access) ast.getReceiver()).getReceiver().isPresent()) {
-            visit(ast.getReceiver()).setField(((Ast.Expr.Access) ast.getReceiver()).getName(), visit(ast.getValue()));
+            visit(((Ast.Expr.Access) ast.getReceiver()).getReceiver().get()).setField( ((Ast.Expr.Access) ast.getReceiver()).getName(), visit(ast.getValue()) );
         } else {
             scope.lookupVariable(((Ast.Expr.Access) ast.getReceiver()).getName()).setValue(visit(ast.getValue()));
         }
