@@ -69,7 +69,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Expression ast) {
 
-        visit ( ast.getExpression() );
+        Ast.Expr expr = ast.getExpression();
+        visit ( expr );
+
+        String temp = expr.toString();
+        temp = temp.substring(temp.indexOf("literal=") + 8);
+        temp = temp.replace("}]}", "");
+        System.out.println(temp);
+
         return Environment.NIL;
     }
 
