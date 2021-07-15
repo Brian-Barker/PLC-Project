@@ -3,6 +3,7 @@ package plc.project;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Optional;
@@ -83,6 +84,30 @@ public final class InterpreterBaselineTests {
                 new Ast.Expr.Literal(BigInteger.ONE)
         ))), Environment.NIL.getValue(), scope);
         Assertions.assertEquals("1", builder.toString());
+    }
+
+    @Test
+    void testLogarithmExpressionStatment() {
+        Scope scope = new Scope(null);
+        test(new Ast.Expr.Function(
+                        Optional.empty(),
+                        "logarithm",
+                        Arrays.asList(new Ast.Expr.Literal(BigDecimal.valueOf(Math.E)))),
+                BigDecimal.valueOf(1.0),
+                scope
+        );
+    }
+
+    @Test
+    void testLogarithmExpressionError() {
+        Scope scope = new Scope(null);
+        test(new Ast.Expr.Function(
+                        Optional.empty(),
+                        "logarithm",
+                        Arrays.asList(new Ast.Expr.Literal(BigInteger.valueOf(3)))),
+                null,
+                scope
+        );
     }
 
     /**
