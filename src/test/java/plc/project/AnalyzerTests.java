@@ -241,6 +241,11 @@ public final class AnalyzerTests {
                         // 9223372036854775807
                         new Ast.Expr.Literal(BigInteger.valueOf(Long.MAX_VALUE)),
                         null
+                ),
+                Arguments.of("Decimal Valid (ADDED)",
+                        // 9223372036854775807
+                        new Ast.Expr.Literal(BigDecimal.valueOf(Long.MAX_VALUE)),
+                        init(new Ast.Expr.Literal(BigDecimal.valueOf(Long.MAX_VALUE)), ast -> ast.setType(Environment.Type.DECIMAL))
                 )
         );
     }
