@@ -15,6 +15,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     public Interpreter(Scope parent) {
         scope = new Scope(parent);
         scope.defineFunction("print", 1, args -> {
+            System.out.println(args.get(0).getValue().toString());
             return Environment.NIL;
         });
     }
@@ -68,15 +69,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Expression ast) {
-
-        Ast.Expr expr = ast.getExpression();
-        visit ( expr );
-
-        String temp = expr.toString();
-        temp = temp.substring(temp.indexOf("literal=") + 8);
-        temp = temp.replace("}]}", "");
-        System.out.println(temp);
-
+        visit ( ast.getExpression() );
         return Environment.NIL;
     }
 
