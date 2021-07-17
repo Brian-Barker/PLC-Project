@@ -15,8 +15,20 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     public Interpreter(Scope parent) {
         scope = new Scope(parent);
         scope.defineFunction("print", 1, args -> {
-            System.out.println(args.get(0).getValue().toString());
+            System.out.println(args.get(0).getValue());
             return Environment.NIL;
+        });
+
+        scope.defineFunction("logarithm", 1, arg_list -> {
+          if ( !( arg_list.get(0).getValue() instanceof BigDecimal) ) {
+              throw new RuntimeException("Expected type BigDecimal, received"
+                      + arg_list.get(0).getValue().getClass().getName() + ".");
+          }
+          BigDecimal bd1 = (BigDecimal) arg_list.get(0).getValue();
+          BigDecimal bd2 = requireType(BigDecimal.class, Environment.create(arg_list.get(0).getValue()));
+          BigDecimal res = BigDecimal.valueOf(Math.log(bd2.doubleValue()));
+
+          return Environment.create(res);
         });
     }
 
