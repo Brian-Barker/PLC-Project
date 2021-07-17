@@ -60,9 +60,7 @@ public final class Parser {
         Optional<Ast.Expr> value = Optional.empty();
 
         String type = tokens.get(-1).getLiteral();
-
-        System.out.println(variable + " " + type);
-
+        
         if (match("=")) {
             value = Optional.ofNullable(parseExpression());
             if (!value.isPresent()) { //Make sure there is actually an expression
