@@ -51,27 +51,29 @@ public final class Parser {
      * next tokens start a field, aka {@code LET}.
      */
     public Ast.Field parseField() throws ParseException {
-
         match ("LET");
-        if (!match(Token.Type.IDENTIFIER)) {
-            throw new ParseException("Expected Identifier", tokens.index);
+        if (!match(Token.Type.IDENTIFIER, ":", Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected \"Identifier : Identifier\"", tokens.index);
         }
-        else {
-            String variable = tokens.get(-1).getLiteral();
-            Optional<Ast.Expr> value = Optional.empty();
 
-            if (match("=")) {
-                value = Optional.ofNullable(parseExpression());
-                if (!value.isPresent()) { //Make sure there is actually an expression
-                    throw new ParseException("Expected Expression", tokens.index);
-                }
-            }
+        String variable = tokens.get(-3).getLiteral();
+        Optional<Ast.Expr> value = Optional.empty();
 
-            if (!match(";")) {
-                throw new ParseException("Missing Semicolon", tokens.index);
+        String type = tokens.get(-1).getLiteral();
+
+        System.out.println(variable + " " + type);
+
+        if (match("=")) {
+            value = Optional.ofNullable(parseExpression());
+            if (!value.isPresent()) { //Make sure there is actually an expression
+                throw new ParseException("Expected Expression", tokens.index);
             }
-            return new Ast.Field(variable, value);
         }
+
+        if (!match(";")) {
+            throw new ParseException("Missing Semicolon", tokens.index);
+        }
+        return new Ast.Field(variable, type, value);
     }
 
     /**
@@ -79,29 +81,33 @@ public final class Parser {
      * next tokens start a method, aka {@code DEF}.
      */
     public Ast.Method parseMethod() throws ParseException {
-        String variable1;
-        List<String> str = new ArrayList<>();
-        List<Ast.Stmt> stmt = new ArrayList<>();
+        String name;
+        List<String> parameters = new ArrayList<>();
+        List<String> parameterTypeNames = new ArrayList<>();
+        Optional<String> returnTypeName = Optional.empty();
+        List<Ast.Stmt> statements = new ArrayList<>();
 
         match("DEF");
 
         if (!match(Token.Type.IDENTIFIER)) {
             throw new ParseException("Expected Identifier", tokens.index);
         }
-
-        variable1 = tokens.get(-1).getLiteral();
+        name = tokens.get(-1).getLiteral();
 
         if (!match("(")) {
             throw new ParseException("Expected opening parenthesis.", tokens.index);
         }
 
-        if (match(Token.Type.IDENTIFIER)) {
-            str.add(tokens.get(-1).getLiteral());
+        if (match(Token.Type.IDENTIFIER, ":", Token.Type.IDENTIFIER)) {
+            parameters.add(tokens.get(-3).getLiteral());
+            parameterTypeNames.add(tokens.get(-1).getLiteral());
             while (match(",")) {
-                if (!match(Token.Type.IDENTIFIER)) {
-                    throw new ParseException("Expected identifier.", tokens.index);
+                if (!match(Token.Type.IDENTIFIER, ":", Token.Type.IDENTIFIER)) {
+                    throw new ParseException("Expected \"Identifier : Type\"", tokens.index);
+                } else {
+                    parameters.add(tokens.get(-3).getLiteral());
+                    parameterTypeNames.add(tokens.get(-1).getLiteral());
                 }
-                str.add(tokens.get(-1).getLiteral());
             }
         }
 
@@ -109,18 +115,22 @@ public final class Parser {
             throw new ParseException("Expected closing parenthesis.", tokens.index);
         }
 
+        if (match(":", Token.Type.IDENTIFIER)) {
+            returnTypeName = Optional.ofNullable(tokens.get(-1).getLiteral());
+        }
+
         if (!match("DO")) {
             throw new ParseException("Expected \"DO\".", tokens.index);
         }
         while(tokens.has(0) && !peek("END")) {
-            stmt.add(parseStatement());
+            statements.add(parseStatement());
         }
 
         if (!match("END")) {
             throw new ParseException("Expected \"END\".", tokens.index);
         }
 
-        return new Ast.Method(variable1, str, stmt);
+        return new Ast.Method(name, parameters, parameterTypeNames, returnTypeName, statements);
     }
 
     /**
@@ -173,6 +183,11 @@ public final class Parser {
 
         String variable = tokens.get(-1).getLiteral();
         Optional<Ast.Expr> value = Optional.empty();
+        Optional<String> type = Optional.empty();
+
+        if (match(":", Token.Type.IDENTIFIER)) {
+            type = Optional.ofNullable(tokens.get(-1).getLiteral());
+        }
 
         if (match("=")) {
             value = Optional.ofNullable(parseExpression());
@@ -181,7 +196,7 @@ public final class Parser {
         if (!match(";")) {
             throw new ParseException("Expected Semicolon", tokens.index);
         }
-        return new Ast.Stmt.Declaration(variable, value);
+        return new Ast.Stmt.Declaration(variable, type, value);
     }
 
     /**
