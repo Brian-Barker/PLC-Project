@@ -29,12 +29,35 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException();  // TODO
+        System.out.println(ast.getFields());
+        ast.getFields().forEach(this::visit);
+
+        Boolean gotMain = false;
+        for (Ast.Method func : ast.getMethods()) {
+            if (func.getName().equals("main") && func.getParameters().size() == 0) {
+                if (gotMain) {
+                    throw new RuntimeException("Error: multiple \"main\" functions received.");
+                }
+                gotMain = true;
+                if (!func.getReturnTypeName().isPresent()) throw new RuntimeException("Error: no return type for main. Should return Integer.");
+                requireAssignable( Environment.Type.INTEGER, Environment.getType(func.getReturnTypeName().get()) );
+            }
+            visit(func);
+        }
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Field ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getValue().isPresent()) {
+            requireAssignable( Environment.getType(ast.getTypeName()), ast.getValue().get().getType() );
+            visit(ast.getValue().get());
+        }
+
+        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName()), Environment.NIL));
+
+        return null;
     }
 
     @Override
@@ -44,13 +67,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Expression ast) {
-        return null;
+        throw new UnsupportedOperationException();  // TODOs
     }
 
     @Override
     public Void visit(Ast.Stmt.Declaration ast) {
-
-        // 'LET' identifier (':' identifier)? ('=' expression)? ';
 
         if (!ast.getTypeName().isPresent() && !ast.getValue().isPresent()) {
             throw new RuntimeException("Declaration must have type or value to infer type.");
@@ -79,19 +100,21 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Assignment ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getReceiver().getClass() != Ast.Expr.Access.class) {
+            throw new RuntimeException("Error: Receiver must be an access expression. Got: " + ast.getReceiver().getClass());
+        }
+
+        requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Stmt.If ast) {
-
-        Environment.Type type = null;
-        //type = Environment.getType(String.valueOf(ast.getCondition().getClass().getCanonicalName()));
-        type = Environment.getType(String.valueOf(ast.getCondition()));
-
-        if ( ast.getThenStatements().isEmpty() || (type != Environment.Type.BOOLEAN)) {
+        if ( ast.getThenStatements().isEmpty()) {
             throw new RuntimeException("Invalid If Statement.");
         }
+        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
 
         ast.getThenStatements().forEach(this::visit);
         ast.getElseStatements().forEach(this::visit);
