@@ -44,7 +44,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Expression ast) {
-        throw new UnsupportedOperationException();  // TODO
+        return null;
     }
 
     @Override
@@ -84,9 +84,15 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.If ast) {
-        if ( ast.getThenStatements().isEmpty() && (ast.getCondition().getType() != Environment.Type.BOOLEAN)) {
-            throw new RuntimeException("Then Statements are not present.");
+
+        Environment.Type type = null;
+        //type = Environment.getType(String.valueOf(ast.getCondition().getClass().getCanonicalName()));
+        type = Environment.getType(String.valueOf(ast.getCondition()));
+
+        if ( ast.getThenStatements().isEmpty() || (type != Environment.Type.BOOLEAN)) {
+            throw new RuntimeException("Invalid If Statement.");
         }
+
         ast.getThenStatements().forEach(this::visit);
         ast.getElseStatements().forEach(this::visit);
 
@@ -95,17 +101,27 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.For ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if ( ast.getStatements().isEmpty() || (ast.getValue().getType() != Environment.Type.INTEGER_ITERABLE)) {
+            throw new RuntimeException("Invalid For Statement.");
+        }
+
+        for (Object element : ast.getStatements()) {
+            scope = new Scope(scope);
+            scope.defineVariable(ast.getName(), (Environment.PlcObject) element);
+            throw new UnsupportedOperationException();  // TODO
+        }
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Stmt.While ast) {
-        throw new UnsupportedOperationException();  // TODO
+        return null;
     }
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
-        throw new UnsupportedOperationException();  // TODO
+        return null;
     }
 
     @Override
@@ -147,7 +163,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Group ast) {
-        throw new UnsupportedOperationException();  // TODO
+        return null;
     }
 
     @Override
@@ -155,27 +171,27 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Ast.Expr left = ast.getLeft();
         Ast.Expr right = ast.getRight();
         String opr = ast.getOperator();
-
+        //left.toString().contains("true") || left.toString().contains("false")) && (right.toString().contains("true") || right.toString().contains("false")
         if (opr.equals("AND") || opr.equals("OR")) {
-            if ((left.toString().contains("true") || left.toString().contains("false")) && (right.toString().contains("true") || right.toString().contains("false"))) {
+            if (left.getType() == Environment.Type.BOOLEAN && right.getType() == Environment.Type.BOOLEAN) {
                 ast.setType(Environment.Type.BOOLEAN);
             }
         }
         else if (opr.equals("<") || opr.equals("<=") || opr.equals(">") || opr.equals(">=") || opr.equals("==") || opr.equals("!=")) {
-//            if (ast.getLeft().getType() == Environment.Type.COMPARABLE && ast.getRight().getType() == Environment.Type.COMPARABLE) {
-//                ast.setType(Environment.Type.BOOLEAN);
-//            }
+            if (left.getType() == Environment.Type.COMPARABLE && right.getType() == Environment.Type.COMPARABLE) {
+                ast.setType(Environment.Type.BOOLEAN);
+            }
         }
         else if (opr.equals("+")) {
-//            if (ast.getLeft().getClass().getName() instanceof String || ast.getLeft().getClass().getName() instanceof String) {
-//                ast.setType(Environment.Type.STRING);
-//            }
-//            else if (ast.getLeft().getType() == Environment.Type.INTEGER && ast.getRight().getType() == Environment.Type.INTEGER) {
-//                ast.setType(Environment.Type.INTEGER);
-//            }
-//            else if (ast.getLeft().getType() == Environment.Type.DECIMAL && ast.getRight().getType() == Environment.Type.DECIMAL) {
-//                ast.setType(Environment.Type.DECIMAL);
-//            }
+            if (left.getType() == Environment.Type.STRING && right.getType() == Environment.Type.STRING) {
+                ast.setType(Environment.Type.STRING);
+            }
+            else if (left.getType() == Environment.Type.INTEGER && right.getType() == Environment.Type.INTEGER) {
+                ast.setType(Environment.Type.INTEGER);
+            }
+            else if (left.getType() == Environment.Type.DECIMAL && right.getType() == Environment.Type.DECIMAL) {
+                ast.setType(Environment.Type.DECIMAL);
+            }
         }
 
         return null;
@@ -183,14 +199,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Access ast) {
-        //Environment.Type type = ast.getType();
-
-        //Environment.Variable variable = ast.getVariable();
 
         if (ast.getReceiver().isPresent()) {
-            Ast.Expr temp = ast.getReceiver().get();
-
-            //ast.setVariable(variable);
+//            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), ast.getReceiver().get().getType(), Environment.NIL));
+            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), Environment.Type.INTEGER, Environment.NIL));
+        }
+        else {
+            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), scope.lookupVariable(ast.getName()).getType(), Environment.NIL));
         }
 
         return null;
@@ -198,7 +213,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+        return null;
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
