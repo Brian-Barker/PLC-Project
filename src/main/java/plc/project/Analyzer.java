@@ -2,12 +2,8 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.EmptyStackException;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import java.util.Optional;
 
 /**
  * See the specification for information about what the different visit
@@ -62,12 +58,42 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        throw new UnsupportedOperationException();  // TODO
+        List<Environment.Type> parameterTypes = new ArrayList<>();
+        for (String typeName : ast.getParameterTypeNames()) {
+            parameterTypes.add(Environment.getType(typeName));
+        }
+
+        Environment.Type returnType;
+        if (ast.getReturnTypeName().isPresent())
+            returnType = Environment.getType(ast.getReturnTypeName().get());
+        else
+            returnType = Environment.Type.NIL;
+
+        System.out.println(ast);
+
+        java.util.function.Function<List<Environment.PlcObject>, Environment.PlcObject> function = arguments -> { return Environment.NIL; };
+        ast.setFunction(scope.defineFunction( ast.getName(), ast.getName(), parameterTypes, returnType, function));
+
+        scope = new Scope(scope);
+        //scope.defineVariable("RETURN_TYPE", Environment.create(ast.getReturnTypeName().get()));
+
+        for (int i = 0; i < ast.getParameters().size(); ++i) {
+            scope.defineVariable(ast.getParameters().get(i), ast.getParameters().get(i), Environment.getType(ast.getParameterTypeNames().get(i)), Environment.NIL);
+        }
+        for (Ast.Stmt stmt : ast.getStatements()) {
+            visit(stmt);
+        }
+        scope = scope.getParent();
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Stmt.Expression ast) {
-        throw new UnsupportedOperationException();  // TODOs
+        if (ast.getExpression().getClass() != Ast.Expr.Function.class)
+            throw new RuntimeException("Error: Expression not a Ast.Expr.Function. Got: " + ast.getExpression().getClass());
+
+        return null;
     }
 
     @Override
@@ -124,14 +150,18 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.For ast) {
-        if ( ast.getStatements().isEmpty() || (ast.getValue().getType() != Environment.Type.INTEGER_ITERABLE)) {
-            throw new RuntimeException("Invalid For Statement.");
+        requireAssignable(Environment.Type.INTEGER_ITERABLE, ast.getValue().getType());
+        if (ast.getStatements().size() == 0) {
+            throw new RuntimeException("Error: Statement List empty");
         }
 
-        for (Object element : ast.getStatements()) {
+        for (Ast.Stmt stmt : ast.getStatements()) {
             scope = new Scope(scope);
-            scope.defineVariable(ast.getName(), (Environment.PlcObject) element);
-            throw new UnsupportedOperationException();  // TODO
+
+            scope.defineVariable(ast.getName(), ast.getName(), Environment.Type.INTEGER, Environment.NIL);
+            visit(stmt);
+
+            scope = scope.getParent();
         }
 
         return null;
@@ -139,11 +169,23 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.While ast) {
+        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+
+        for (Ast.Stmt stmt : ast.getStatements()) {
+            scope = new Scope(scope);
+
+            visit(stmt);
+
+            scope = scope.getParent();
+        }
+
         return null;
     }
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
+        System.out.println(ast);
+
         return null;
     }
 
@@ -186,6 +228,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Group ast) {
+        if (ast.getExpression().getClass() != Ast.Expr.Binary.class) {
+            throw new RuntimeException("Error: Group must contain binary expression. Got: " + ast.getExpression().getClass());
+        }
+
+        ast.setType(ast.getExpression().getType());
+
         return null;
     }
 
