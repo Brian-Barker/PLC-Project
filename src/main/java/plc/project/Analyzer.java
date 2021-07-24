@@ -25,7 +25,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        System.out.println(ast.getFields());
         ast.getFields().forEach(this::visit);
 
         Boolean gotMain = false;
@@ -331,9 +330,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
         String tempType = type.getName();
         String tempTarget = target.getName();
-
-        System.out.println("Type: " + type.getName());
-        System.out.println("Target: " + target.getName());
 
         switch (tempTarget) {
             case "Any":
