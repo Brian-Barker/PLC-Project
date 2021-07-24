@@ -307,6 +307,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Environment.Function function;
 
         if (ast.getReceiver().isPresent()) {
+            visit(ast.getReceiver().get());
             function = ast.getReceiver().get().getType().getMethod(ast.getName(), ast.getArguments().size());
 
             for (int i = 1; i < ast.getArguments().size(); ++i) {
