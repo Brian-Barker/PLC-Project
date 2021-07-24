@@ -204,8 +204,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Object value = ast.getLiteral();
 
         if (value instanceof BigInteger) {
-            System.out.println(((BigInteger) value).bitLength());
-            if ( ((BigInteger) value).intValue() >= 0 && ((BigInteger) value).bitLength() < 32 ) {
+            if ( ((BigInteger) value).bitLength() <= 32 ) {
                 ast.setType(Environment.Type.INTEGER);
             }
             else {
@@ -213,7 +212,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             }
         }
         else if (value instanceof BigDecimal) {
-            if ((((BigDecimal) value).doubleValue() >= -9223372036854775808L) && (((BigDecimal) value).doubleValue() <= 9223372036854775807L)) {
+            if ( ((BigDecimal) value).doubleValue() != Double.POSITIVE_INFINITY && ((BigDecimal) value).doubleValue() != Double.NEGATIVE_INFINITY ) {
                 ast.setType(Environment.Type.DECIMAL);
             }
             else {
