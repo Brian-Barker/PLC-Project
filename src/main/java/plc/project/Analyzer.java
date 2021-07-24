@@ -69,13 +69,15 @@ public final class Analyzer implements Ast.Visitor<Void> {
         else
             returnType = Environment.Type.NIL;
 
-        System.out.println(ast);
+        for (Ast.Stmt stmt : ast.getStatements()) {
+            visit(stmt);
+        }
 
         java.util.function.Function<List<Environment.PlcObject>, Environment.PlcObject> function = arguments -> { return Environment.NIL; };
         ast.setFunction(scope.defineFunction( ast.getName(), ast.getName(), parameterTypes, returnType, function));
 
         scope = new Scope(scope);
-        //scope.defineVariable("RETURN_TYPE", Environment.create(ast.getReturnTypeName().get()));
+        scope.defineVariable("$RETURN_TYPE", Environment.create(ast.getReturnTypeName().get()));
 
         for (int i = 0; i < ast.getParameters().size(); ++i) {
             scope.defineVariable(ast.getParameters().get(i), ast.getParameters().get(i), Environment.getType(ast.getParameterTypeNames().get(i)), Environment.NIL);
@@ -184,7 +186,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
-        System.out.println(ast);
+        visit(ast.getValue());
+
+        requireAssignable(scope.lookupVariable("$Return_Type").getType(), ast.getValue().getType());
 
         return null;
     }
@@ -240,27 +244,36 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Expr.Binary ast) {
         Ast.Expr left = ast.getLeft();
+        visit(left);
         Ast.Expr right = ast.getRight();
+        visit(right);
         String opr = ast.getOperator();
-        //left.toString().contains("true") || left.toString().contains("false")) && (right.toString().contains("true") || right.toString().contains("false")
+
+        requireAssignable(Environment.Type.ANY, left.getType());
+        requireAssignable(Environment.Type.ANY, right.getType());
+
         if (opr.equals("AND") || opr.equals("OR")) {
-            if (left.getType() == Environment.Type.BOOLEAN && right.getType() == Environment.Type.BOOLEAN) {
-                ast.setType(Environment.Type.BOOLEAN);
-            }
+            requireAssignable(Environment.Type.BOOLEAN, left.getType());
+            requireAssignable(Environment.Type.BOOLEAN, right.getType());
+            ast.setType(Environment.Type.BOOLEAN);
         }
         else if (opr.equals("<") || opr.equals("<=") || opr.equals(">") || opr.equals(">=") || opr.equals("==") || opr.equals("!=")) {
-            if (left.getType() == Environment.Type.COMPARABLE && right.getType() == Environment.Type.COMPARABLE) {
-                ast.setType(Environment.Type.BOOLEAN);
+            requireAssignable(Environment.Type.COMPARABLE, left.getType());
+            if (!left.getType().equals(right.getType())) {
+                throw new RuntimeException("Error: type of left and right must be the same. Got: " + left.getType() + " and " + right.getType());
             }
+            ast.setType(Environment.Type.BOOLEAN);
         }
         else if (opr.equals("+")) {
-            if (left.getType() == Environment.Type.STRING && right.getType() == Environment.Type.STRING) {
+            if (left.getType() == Environment.Type.STRING || right.getType() == Environment.Type.STRING) {
                 ast.setType(Environment.Type.STRING);
             }
-            else if (left.getType() == Environment.Type.INTEGER && right.getType() == Environment.Type.INTEGER) {
+            else if (left.getType() == Environment.Type.INTEGER) {
+                requireAssignable(Environment.Type.INTEGER, right.getType());
                 ast.setType(Environment.Type.INTEGER);
             }
-            else if (left.getType() == Environment.Type.DECIMAL && right.getType() == Environment.Type.DECIMAL) {
+            else if (left.getType() == Environment.Type.DECIMAL) {
+                requireAssignable(Environment.Type.DECIMAL, right.getType());
                 ast.setType(Environment.Type.DECIMAL);
             }
         }
@@ -284,6 +297,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Function ast) {
+
         return null;
     }
 
@@ -298,23 +312,26 @@ public final class Analyzer implements Ast.Visitor<Void> {
             case "Any":
                 break;
             case "Comparable":
-                if (tempType.contains("Integer")){ break; }
+                if (tempType.equals("Integer")){ break; }
                 else if (tempType.contains("Decimal")){ break; }
                 else if (tempType.contains("Character")){ break; }
                 else if (tempType.contains("String")){ break; }
                 else { throw new RuntimeException("Target of Type 'Comparable' did not match anything from our language can be assigned to it."); }
             case "Integer":
-                if (tempType.contains("Integer")){ break; }
+                if (tempType.equals("Integer")){ break; }
                 throw new RuntimeException("Target of Type 'Integer' did not match Type: " + tempType);
             case "Decimal":
-                if (tempType.contains("Decimal")){ break; }
+                if (tempType.equals("Decimal")){ break; }
                 throw new RuntimeException("Target of Type 'Decimal' did not match Type: " + tempType);
             case "Character":
-                if (tempType.contains("Character")){ break; }
+                if (tempType.equals("Character")){ break; }
                 throw new RuntimeException("Target of Type 'Character' did not match Type: " + tempType);
             case "String":
-                if (tempType.contains("String")){ break; }
+                if (tempType.equals("String")){ break; }
                 throw new RuntimeException("Target of Type 'String' did not match Type: " + tempType);
+            case "Boolean":
+                if (tempType.equals("Boolean")){ break; }
+                throw new RuntimeException("Target of Type 'Boolean' did not match Type: " + tempType);
             default:
                 throw new RuntimeException("The target type could not be assigned to any type.");
         }
