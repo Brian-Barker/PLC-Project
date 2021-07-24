@@ -92,6 +92,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Expression ast) {
+        visit(ast.getExpression());
+
         if (ast.getExpression().getClass() != Ast.Expr.Function.class)
             throw new RuntimeException("Error: Expression not a Ast.Expr.Function. Got: " + ast.getExpression().getClass());
 
@@ -139,6 +141,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.If ast) {
+        visit(ast.getCondition());
         if ( ast.getThenStatements().isEmpty()) {
             throw new RuntimeException("Invalid If Statement.");
         }
@@ -198,8 +201,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Object value = ast.getLiteral();
 
         if (value instanceof BigInteger) {
-            long intValue = ((BigInteger) value).longValue();
-            if ((intValue >= -2147483648) && (intValue <= 2147483647)) {
+            System.out.println(((BigInteger) value).bitLength());
+            if ( ((BigInteger) value).intValue() >= 0 && ((BigInteger) value).bitLength() < 32 ) {
                 ast.setType(Environment.Type.INTEGER);
             }
             else {
@@ -207,8 +210,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             }
         }
         else if (value instanceof BigDecimal) {
-            long valLong = ((BigDecimal) value).longValue();
-            if ((valLong >= -9223372036854775808L) && (valLong <= 9223372036854775807L)) {
+            if ((((BigDecimal) value).doubleValue() >= -9223372036854775808L) && (((BigDecimal) value).doubleValue() <= 9223372036854775807L)) {
                 ast.setType(Environment.Type.DECIMAL);
             }
             else {
@@ -226,12 +228,17 @@ public final class Analyzer implements Ast.Visitor<Void> {
         else if (value instanceof String) {
             ast.setType(Environment.Type.STRING);
             return null;
+        } else {
+            ast.setType(Environment.Type.NIL);
         }
+
         return null;
     }
 
     @Override
     public Void visit(Ast.Expr.Group ast) {
+        visit(ast.getExpression());
+
         if (ast.getExpression().getClass() != Ast.Expr.Binary.class) {
             throw new RuntimeException("Error: Group must contain binary expression. Got: " + ast.getExpression().getClass());
         }
@@ -297,6 +304,25 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Function ast) {
+        Environment.Function function;
+
+        if (ast.getReceiver().isPresent()) {
+            function = ast.getReceiver().get().getType().getMethod(ast.getName(), ast.getArguments().size());
+
+            for (int i = 1; i < ast.getArguments().size(); ++i) {
+                visit(ast.getArguments().get(i));
+                requireAssignable(function.getParameterTypes().get(i-1), ast.getArguments().get(i).getType());
+            }
+        } else {
+            function = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+
+            for (int i = 0; i < ast.getArguments().size(); ++i) {
+                visit(ast.getArguments().get(i));
+                requireAssignable(function.getParameterTypes().get(i), ast.getArguments().get(i).getType());
+            }
+        }
+
+        ast.setFunction(function);
 
         return null;
     }
