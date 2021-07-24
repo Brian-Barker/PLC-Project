@@ -130,6 +130,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Assignment ast) {
+        visit(ast.getReceiver());
+        visit(ast.getValue());
+
         if (ast.getReceiver().getClass() != Ast.Expr.Access.class) {
             throw new RuntimeException("Error: Receiver must be an access expression. Got: " + ast.getReceiver().getClass());
         }
@@ -292,8 +295,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Void visit(Ast.Expr.Access ast) {
 
         if (ast.getReceiver().isPresent()) {
-//            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), ast.getReceiver().get().getType(), Environment.NIL));
-            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), Environment.Type.INTEGER, Environment.NIL));
+            visit(ast.getReceiver().get());
+            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), ast.getReceiver().get().getType().getField(ast.getName()).getType(), Environment.NIL));
         }
         else {
             ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), scope.lookupVariable(ast.getName()).getType(), Environment.NIL));
