@@ -139,18 +139,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.If ast) {
-        String bool = String.valueOf(ast.getCondition());
-        boolean tf = (bool.contains("true") || bool.contains("false"));
-        if ( ast.getThenStatements().isEmpty() || !tf) {
+        if ( ast.getThenStatements().isEmpty()) {
             throw new RuntimeException("Invalid If Statement.");
         }
-        else if (tf) {
-            ast.getThenStatements().forEach(this::visit);
-            ast.getElseStatements().forEach(this::visit);
-        }
-        //requireAssignable(Environment.getType(), Environment.Type.BOOLEAN);
+        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
 
-
+        ast.getThenStatements().forEach(this::visit);
+        ast.getElseStatements().forEach(this::visit);
 
         return null;
     }
