@@ -25,7 +25,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        System.out.println(ast.getFields());
         ast.getFields().forEach(this::visit);
 
         Boolean gotMain = false;
@@ -69,13 +68,15 @@ public final class Analyzer implements Ast.Visitor<Void> {
         else
             returnType = Environment.Type.NIL;
 
-        System.out.println(ast);
+        for (Ast.Stmt stmt : ast.getStatements()) {
+            visit(stmt);
+        }
 
         java.util.function.Function<List<Environment.PlcObject>, Environment.PlcObject> function = arguments -> { return Environment.NIL; };
         ast.setFunction(scope.defineFunction( ast.getName(), ast.getName(), parameterTypes, returnType, function));
 
         scope = new Scope(scope);
-        //scope.defineVariable("RETURN_TYPE", Environment.create(ast.getReturnTypeName().get()));
+        scope.defineVariable("$RETURN_TYPE", Environment.create(ast.getReturnTypeName().get()));
 
         for (int i = 0; i < ast.getParameters().size(); ++i) {
             scope.defineVariable(ast.getParameters().get(i), ast.getParameters().get(i), Environment.getType(ast.getParameterTypeNames().get(i)), Environment.NIL);
@@ -90,6 +91,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Expression ast) {
+        visit(ast.getExpression());
+
         if (ast.getExpression().getClass() != Ast.Expr.Function.class)
             throw new RuntimeException("Error: Expression not a Ast.Expr.Function. Got: " + ast.getExpression().getClass());
 
@@ -126,6 +129,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Assignment ast) {
+        visit(ast.getReceiver());
+        visit(ast.getValue());
+
         if (ast.getReceiver().getClass() != Ast.Expr.Access.class) {
             throw new RuntimeException("Error: Receiver must be an access expression. Got: " + ast.getReceiver().getClass());
         }
@@ -137,18 +143,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.If ast) {
-        String bool = String.valueOf(ast.getCondition());
-        boolean tf = (bool.contains("true") || bool.contains("false"));
-        Environment.Type type = null;
-        if ( ast.getThenStatements().isEmpty() || !tf) {
+        visit(ast.getCondition());
+        if ( ast.getThenStatements().isEmpty()) {
             throw new RuntimeException("Invalid If Statement.");
         }
-        else if (tf) {
-                type = Environment.Type.BOOLEAN;
-        }
-
-        System.out.println(type);
-//        requireAssignable(type, Environment.Type.BOOLEAN);
+        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
 
         ast.getThenStatements().forEach(this::visit);
         ast.getElseStatements().forEach(this::visit);
@@ -192,7 +191,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
-        System.out.println(ast);
+        visit(ast.getValue());
+
+        requireAssignable(scope.lookupVariable("$Return_Type").getType(), ast.getValue().getType());
 
         return null;
     }
@@ -202,8 +203,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Object value = ast.getLiteral();
 
         if (value instanceof BigInteger) {
-            long intValue = ((BigInteger) value).longValue();
-            if ((intValue >= -2147483648) && (intValue <= 2147483647)) {
+            if ( ((BigInteger) value).bitLength() <= 32 ) {
                 ast.setType(Environment.Type.INTEGER);
             }
             else {
@@ -211,8 +211,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             }
         }
         else if (value instanceof BigDecimal) {
-            long valLong = ((BigDecimal) value).longValue();
-            if ((valLong >= -9223372036854775808L) && (valLong <= 9223372036854775807L)) {
+            if ( ((BigDecimal) value).doubleValue() != Double.POSITIVE_INFINITY && ((BigDecimal) value).doubleValue() != Double.NEGATIVE_INFINITY ) {
                 ast.setType(Environment.Type.DECIMAL);
             }
             else {
@@ -230,12 +229,17 @@ public final class Analyzer implements Ast.Visitor<Void> {
         else if (value instanceof String) {
             ast.setType(Environment.Type.STRING);
             return null;
+        } else {
+            ast.setType(Environment.Type.NIL);
         }
+
         return null;
     }
 
     @Override
     public Void visit(Ast.Expr.Group ast) {
+        visit(ast.getExpression());
+
         if (ast.getExpression().getClass() != Ast.Expr.Binary.class) {
             throw new RuntimeException("Error: Group must contain binary expression. Got: " + ast.getExpression().getClass());
         }
@@ -249,29 +253,36 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Void visit(Ast.Expr.Binary ast) {
 
         Ast.Expr left = ast.getLeft();
-        Ast.Expr right = ast.getRight();
-        String opr = ast.getOperator();
         visit(left);
+        Ast.Expr right = ast.getRight();
         visit(right);
-        //left.toString().contains("true") || left.toString().contains("false")) && (right.toString().contains("true") || right.toString().contains("false")
+        String opr = ast.getOperator();
+
+        requireAssignable(Environment.Type.ANY, left.getType());
+        requireAssignable(Environment.Type.ANY, right.getType());
+
         if (opr.equals("AND") || opr.equals("OR")) {
-            if (left.getType() == Environment.Type.BOOLEAN && right.getType() == Environment.Type.BOOLEAN) {
-                ast.setType(Environment.Type.BOOLEAN);
-            }
+            requireAssignable(Environment.Type.BOOLEAN, left.getType());
+            requireAssignable(Environment.Type.BOOLEAN, right.getType());
+            ast.setType(Environment.Type.BOOLEAN);
         }
         else if (opr.equals("<") || opr.equals("<=") || opr.equals(">") || opr.equals(">=") || opr.equals("==") || opr.equals("!=")) {
-            if (left.getType() == Environment.Type.COMPARABLE && right.getType() == Environment.Type.COMPARABLE) {
-                ast.setType(Environment.Type.BOOLEAN);
+            requireAssignable(Environment.Type.COMPARABLE, left.getType());
+            if (!left.getType().equals(right.getType())) {
+                throw new RuntimeException("Error: type of left and right must be the same. Got: " + left.getType() + " and " + right.getType());
             }
+            ast.setType(Environment.Type.BOOLEAN);
         }
         else if (opr.equals("+")) {
-            if (left.getType() == Environment.Type.STRING && right.getType() == Environment.Type.STRING) {
+            if (left.getType() == Environment.Type.STRING || right.getType() == Environment.Type.STRING) {
                 ast.setType(Environment.Type.STRING);
             }
-            else if (left.getType() == Environment.Type.INTEGER && right.getType() == Environment.Type.INTEGER) {
+            else if (left.getType() == Environment.Type.INTEGER) {
+                requireAssignable(Environment.Type.INTEGER, right.getType());
                 ast.setType(Environment.Type.INTEGER);
             }
-            else if (left.getType() == Environment.Type.DECIMAL && right.getType() == Environment.Type.DECIMAL) {
+            else if (left.getType() == Environment.Type.DECIMAL) {
+                requireAssignable(Environment.Type.DECIMAL, right.getType());
                 ast.setType(Environment.Type.DECIMAL);
             }
         }
@@ -281,12 +292,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Access ast) {
-
         if (ast.getReceiver().isPresent()) {
-//            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), ast.getReceiver().get().getType(), Environment.NIL));
-            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), Environment.Type.INTEGER, Environment.NIL));
-        }
-        else {
+            visit(ast.getReceiver().get());
+            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), ast.getReceiver().get().getType().getField(ast.getName()).getType(), Environment.NIL));
+        } else {
             ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), scope.lookupVariable(ast.getName()).getType(), Environment.NIL));
         }
 
@@ -295,6 +304,27 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Function ast) {
+        Environment.Function function;
+
+        if (ast.getReceiver().isPresent()) {
+            visit(ast.getReceiver().get());
+            function = ast.getReceiver().get().getType().getMethod(ast.getName(), ast.getArguments().size());
+
+            for (int i = 1; i < ast.getArguments().size(); ++i) {
+                visit(ast.getArguments().get(i));
+                requireAssignable(function.getParameterTypes().get(i-1), ast.getArguments().get(i).getType());
+            }
+        } else {
+            function = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+
+            for (int i = 0; i < ast.getArguments().size(); ++i) {
+                visit(ast.getArguments().get(i));
+                requireAssignable(function.getParameterTypes().get(i), ast.getArguments().get(i).getType());
+            }
+        }
+
+        ast.setFunction(function);
+
         return null;
     }
 
@@ -302,32 +332,29 @@ public final class Analyzer implements Ast.Visitor<Void> {
         String tempType = type.getName();
         String tempTarget = target.getName();
 
-        System.out.println("Type: " + type.getName());
-        System.out.println("Target: " + target.getName());
-
         switch (tempTarget) {
             case "Any":
                 break;
             case "Comparable":
-                if (tempType.contains("Integer")){ break; }
+                if (tempType.equals("Integer")){ break; }
                 else if (tempType.contains("Decimal")){ break; }
                 else if (tempType.contains("Character")){ break; }
                 else if (tempType.contains("String")){ break; }
                 else { throw new RuntimeException("Target of Type 'Comparable' did not match anything from our language can be assigned to it."); }
             case "Integer":
-                if (tempType.contains("Integer")){ break; }
+                if (tempType.equals("Integer")){ break; }
                 throw new RuntimeException("Target of Type 'Integer' did not match Type: " + tempType);
             case "Decimal":
-                if (tempType.contains("Decimal")){ break; }
+                if (tempType.equals("Decimal")){ break; }
                 throw new RuntimeException("Target of Type 'Decimal' did not match Type: " + tempType);
             case "Character":
-                if (tempType.contains("Character")){ break; }
+                if (tempType.equals("Character")){ break; }
                 throw new RuntimeException("Target of Type 'Character' did not match Type: " + tempType);
             case "String":
-                if (tempType.contains("String")){ break; }
+                if (tempType.equals("String")){ break; }
                 throw new RuntimeException("Target of Type 'String' did not match Type: " + tempType);
             case "Boolean":
-                if (tempType.contains("Boolean")){ break; }
+                if (tempType.equals("Boolean")){ break; }
                 throw new RuntimeException("Target of Type 'Boolean' did not match Type: " + tempType);
             default:
                 throw new RuntimeException("The target type could not be assigned to any type.");
