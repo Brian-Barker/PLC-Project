@@ -328,7 +328,7 @@ public final class Parser {
 
             logical = tokens.get(-1).getLiteral();
 
-            right = parseExpression();
+            right = parseLogicalExpression();
             return new Ast.Expr.Binary(logical, left, right);
         }
         return left;

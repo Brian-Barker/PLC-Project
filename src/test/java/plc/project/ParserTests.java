@@ -372,6 +372,23 @@ final class ParserTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
                 ),
+                Arguments.of("Binary And Or",
+                        Arrays.asList(
+                                //expr1 AND expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "AND", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 10),
+                                new Token(Token.Type.IDENTIFIER, "OR", 16),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 19)
+                        ),
+                        new Ast.Expr.Binary("AND",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Binary("OR",
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr3")
+                                )
+                        )
+                ),
                 Arguments.of("Binary Equality",
                         Arrays.asList(
                                 //expr1 == expr2
