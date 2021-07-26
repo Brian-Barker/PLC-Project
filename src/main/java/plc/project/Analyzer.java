@@ -139,16 +139,19 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Void visit(Ast.Stmt.If ast) {
         String bool = String.valueOf(ast.getCondition());
         boolean tf = (bool.contains("true") || bool.contains("false"));
+        Environment.Type type = null;
         if ( ast.getThenStatements().isEmpty() || !tf) {
             throw new RuntimeException("Invalid If Statement.");
         }
         else if (tf) {
-            ast.getThenStatements().forEach(this::visit);
-            ast.getElseStatements().forEach(this::visit);
+                type = Environment.Type.BOOLEAN;
         }
-        //requireAssignable(Environment.getType(), Environment.Type.BOOLEAN);
 
+        System.out.println(type);
+//        requireAssignable(type, Environment.Type.BOOLEAN);
 
+        ast.getThenStatements().forEach(this::visit);
+        ast.getElseStatements().forEach(this::visit);
 
         return null;
     }
@@ -244,9 +247,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Binary ast) {
+
         Ast.Expr left = ast.getLeft();
         Ast.Expr right = ast.getRight();
         String opr = ast.getOperator();
+        visit(left);
+        visit(right);
         //left.toString().contains("true") || left.toString().contains("false")) && (right.toString().contains("true") || right.toString().contains("false")
         if (opr.equals("AND") || opr.equals("OR")) {
             if (left.getType() == Environment.Type.BOOLEAN && right.getType() == Environment.Type.BOOLEAN) {
@@ -320,6 +326,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
             case "String":
                 if (tempType.contains("String")){ break; }
                 throw new RuntimeException("Target of Type 'String' did not match Type: " + tempType);
+            case "Boolean":
+                if (tempType.contains("Boolean")){ break; }
+                throw new RuntimeException("Target of Type 'Boolean' did not match Type: " + tempType);
             default:
                 throw new RuntimeException("The target type could not be assigned to any type.");
         }
