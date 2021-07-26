@@ -337,6 +337,17 @@ final class ParserTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         ))
+                ),
+                Arguments.of("Missing Closing Parenthesis (Should Fail with index 1)",
+                        Arrays.asList(
+                                //(
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "a", 1)
+                        ),
+                        new Ast.Expr.Group(new Ast.Expr.Binary("+",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        ))
                 )
         );
     }
