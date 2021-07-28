@@ -219,11 +219,7 @@ public final class Generator implements Ast.Visitor<Void> {
             case "Character":
                 print("\'", ast.getLiteral(), "\'");
             case "Integer":
-                print(ast.getLiteral());
-                break;
-            case "Decimal": //TODO
-                print();
-                break;
+            case "Decimal":
             case "Boolean":
                 print(ast.getLiteral());
                 break;
