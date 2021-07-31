@@ -179,6 +179,66 @@ public class GeneratorTests {
         );
     }
 
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testWhileStatement(String test, Ast.Stmt.While ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testWhileStatement() {
+        return Stream.of(
+                Arguments.of("One Statement",
+                        // While condition DO
+                        //     stmt;
+                        // END
+                        new Ast.Stmt.While(
+                                init(new Ast.Expr.Access(Optional.empty(), "condition"), ast -> ast.setVariable(new Environment.Variable("condition", "condition", Environment.Type.BOOLEAN, Environment.NIL))),
+                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL)))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (condition) {",
+                                "    stmt;",
+                                "}"
+                        )
+                ),
+                Arguments.of("No Statements",
+                        // While condition DO
+                        // END
+                        new Ast.Stmt.While(
+                                init(new Ast.Expr.Access(Optional.empty(), "condition"), ast -> ast.setVariable(new Environment.Variable("condition", "condition", Environment.Type.BOOLEAN, Environment.NIL))),
+                                Arrays.asList()
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (condition) {",
+                                "}"
+                        )
+                ),
+                Arguments.of("Multiple Statements",
+                        // While condition DO
+                        //     stmt1;
+                        //     stmt2;
+                        //     stmt3;
+                        // END
+                        new Ast.Stmt.While(
+                                init(new Ast.Expr.Access(Optional.empty(), "condition"), ast -> ast.setVariable(new Environment.Variable("condition", "condition", Environment.Type.BOOLEAN, Environment.NIL))),
+                                Arrays.asList(
+                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt1"), ast -> ast.setVariable(new Environment.Variable("stmt1", "stmt1", Environment.Type.NIL, Environment.NIL)))),
+                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt2"), ast -> ast.setVariable(new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, Environment.NIL)))),
+                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt3"), ast -> ast.setVariable(new Environment.Variable("stmt3", "stmt3", Environment.Type.NIL, Environment.NIL)))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (condition) {",
+                                "    stmt1;",
+                                "    stmt2;",
+                                "    stmt3;",
+                                "}"
+                        )
+                )
+        );
+    }
+
+
     /**
      * Helper function for tests, using a StringWriter as the output stream.
      */
