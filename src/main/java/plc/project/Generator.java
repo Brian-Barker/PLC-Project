@@ -77,14 +77,13 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        System.out.println(ast.getFunction());
         print(ast.getFunction().getReturnType().getJvmName(), " ", ast.getFunction().getJvmName(), "(");
 
         for (int i = 0; i < ast.getParameters().size(); ++i) {
             if (i != 0) {
                 print(", ");
             }
-            print(ast.getParameterTypeNames().get(i), " ", ast.getParameters().get(i));
+            print(parseJVMType(ast.getParameterTypeNames().get(i)), " ", ast.getParameters().get(i));
         }
         print(") {");
 
@@ -290,6 +289,21 @@ public final class Generator implements Ast.Visitor<Void> {
         visit(ast.getRight());
 
         return null;
+    }
+
+    private String parseJVMType(String astName) {
+        switch (astName) {
+            case "Decimal":
+                return "double";
+            case "Integer":
+                return "int";
+            case "Character":
+                return "char";
+            case "Boolean":
+                return "boolean";
+            default:
+                return astName;
+        }
     }
 
     @Override
