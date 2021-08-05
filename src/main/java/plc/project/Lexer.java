@@ -100,7 +100,7 @@ public final class Lexer {
         if ( match("\"") ) {
             return chars.emit(Token.Type.STRING);
         }
-        throw new ParseException("Error Parsing String: No ending Quote", chars.index + 1);
+        throw new ParseException("Error Parsing String: No ending Quote", chars.index);
     }
 
     public Token lexOperator() {
