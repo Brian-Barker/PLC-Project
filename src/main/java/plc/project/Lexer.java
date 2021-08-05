@@ -100,7 +100,7 @@ public final class Lexer {
         if ( match("\"") ) {
             return chars.emit(Token.Type.STRING);
         }
-        throw new ParseException("Error Parsing String", chars.index);
+        throw new ParseException("Error Parsing String: No ending Quote", chars.index + 1);
     }
 
     public Token lexOperator() {
@@ -113,7 +113,7 @@ public final class Lexer {
     public boolean lexEscape() {
         if ( peek("\\\\") ) {
             if ( !match("\\\\", "[bnrt'\"\\\\]") ) {
-                throw new ParseException("Error Parsing: Invalid Escape", chars.index);
+                throw new ParseException("Error Parsing: Invalid Escape", chars.index + 1);
             }
             return true;
         }
