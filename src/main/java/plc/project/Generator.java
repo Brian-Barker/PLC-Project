@@ -40,6 +40,9 @@ public final class Generator implements Ast.Visitor<Void> {
             newline(indent);
             visit(field);
         }
+        if (ast.getFields().size() > 0) {
+            newline(indent);
+        }
 
         newline(indent);
         print("public static void main(String[] args) {");
@@ -194,9 +197,9 @@ public final class Generator implements Ast.Visitor<Void> {
                 }
                 print(ast.getStatements().get(i));
             }
+            newline(--indent);
         }
 
-        newline(--indent);
         print("}");
 
         return null;
@@ -213,6 +216,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Literal ast) {
+        System.out.println(ast);
         switch(ast.getType().getName()) {
             case "String":
                 print("\"", ast.getLiteral(), "\"");
